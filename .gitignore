@@ -115,3 +115,5 @@ doctrees/
 
 # Project specific
 logs/
+
+venv

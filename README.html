@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>README.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="ai-agentic-poc---hospitality-project">AI Agentic PoC - Hospitality Project</h1>
+<p>This repository contains a complete Proof of Concept (PoC) for the hospitality sector using AI Agentic. The project implements a comprehensive hotel management system with specialized AI agents.</p>
+<h2 id="%F0%9F%93%9A-documentation">📚 Documentation</h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./WORKSHOP.md">🎓 Workshop Guide</a></td>
+<td>Step-by-step workshop for building AI agents with LangChain</td>
+</tr>
+<tr>
+<td><a href="./HOWTO_generate_synthetic_data.md">🔧 Synthetic Data Generator</a></td>
+<td>How to generate synthetic hotel and booking data</td>
+</tr>
+<tr>
+<td><a href="./ai_agents_hospitality-api/README.md">🤖 AI Agents API</a></td>
+<td>WebSocket API for AI agent interactions</td>
+</tr>
+<tr>
+<td><a href="./bookings-db/README.md">🗄️ Bookings Database</a></td>
+<td>PostgreSQL database and data loader</td>
+</tr>
+</tbody>
+</table>
+<h2 id="%F0%9F%9A%80-quick-start---launch-application">🚀 Quick Start - Launch Application</h2>
+<p><strong>The complete application is launched using Docker Compose. This is the recommended and primary way to run the system.</strong></p>
+<pre class="hljs"><code><div><span class="hljs-comment"># From the project root directory</span>
+./start-app.sh
+
+<span class="hljs-comment"># Or with log capture for debugging</span>
+./start-app.sh --logs
+
+<span class="hljs-comment"># Access the application</span>
+<span class="hljs-comment"># URL: http://localhost:8001</span>
+
+<span class="hljs-comment"># To stop the application</span>
+./stop-app.sh
+</div></code></pre>
+<p>The script will automatically:</p>
+<ul>
+<li>🗄️ Start PostgreSQL database</li>
+<li>📊 Load synthetic hotel and booking data</li>
+<li>🤖 Launch AI Agents API</li>
+<li>📝 Show application URLs and useful commands</li>
+</ul>
+<h2 id="project-overview">Project Overview</h2>
+<p>The Hospitality PoC is a comprehensive solution consisting of several components that are <strong>orchestrated together via Docker Compose</strong>:</p>
+<ol>
+<li><strong>Hospitality AI Agents API</strong> - WebSocket interface for interacting with AI agents specialized in the hotel sector</li>
+<li><strong>Bookings Database</strong> - PostgreSQL database and synthetic data generator for hotel bookings</li>
+<li><strong>Docker Compose</strong> - <strong>Main orchestration layer</strong> that manages all services and provides the complete solution</li>
+</ol>
+<h3 id="project-structure">Project Structure</h3>
+<pre class="hljs"><code><div>.
+├── ai_agents_hospitality-api/     # AI agents API
+├── bookings-db/                   # Database and data generator
+├── prj-docker-compose/            # Docker Compose configuration
+├── doc/                           # Project documentation and diagrams
+│   ├── arq.png                    # Architecture diagram
+│   └── doc.excalidraw            # Editable architecture diagram source
+├── start-app.sh                   # Main startup script (run from root)
+├── stop-app.sh                    # Main stop script (run from root)
+└── logs/                          # Application logs
+</div></code></pre>
+<h2 id="project-architecture">Project Architecture</h2>
+<p>The Hospitality PoC project is composed of several services that work together to provide a complete AI-powered hospitality solution:</p>
+<ul>
+<li><strong>PostgreSQL database</strong> containing the bookings and related data</li>
+<li><strong>Data loader service</strong> for initializing the database with sample data</li>
+<li><strong>AI agents API</strong> that provides intelligent booking and hospitality services</li>
+<li><strong>Integration with an AI Agentic framework</strong> for advanced AI capabilities</li>
+</ul>
+<p>Below is a visual representation of the project architecture:</p>
+<p><img src="doc/arq.png" alt="Project ARCHITECTURE"></p>
+<h2 id="services">Services</h2>
+<h3 id="bookings-db">bookings-db</h3>
+<ul>
+<li><strong>Description</strong>: PostgreSQL database service for storing booking and hospitality data.</li>
+<li><strong>Image</strong>: <code>postgres:15.3</code></li>
+<li><strong>Container Name</strong>: <code>bookings-db</code></li>
+<li><strong>Ports</strong>: <code>${POSTGRES_PORT}:5432</code></li>
+<li><strong>Environment Variables</strong>:
+<ul>
+<li><code>POSTGRES_USER=${POSTGRES_USER}</code></li>
+<li><code>POSTGRES_PASSWORD=${POSTGRES_PASSWORD}</code></li>
+<li><code>POSTGRES_DB=${POSTGRES_DB}</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="bookings-db-data-loader">bookings-db-data-loader</h3>
+<ul>
+<li><strong>Description</strong>: Service responsible for loading initial data into the database.</li>
+<li><strong>Build</strong>: Built from the context <code>../bookings-db</code> using the <code>Dockerfile</code>.</li>
+<li><strong>Image</strong>: <code>bookings-db-data-loader</code></li>
+<li><strong>Container Name</strong>: <code>bookings-db-data-loader</code></li>
+<li><strong>Depends On</strong>: Depends on the <code>bookings-db</code> service.</li>
+<li><strong>Environment Variables</strong>:
+<ul>
+<li><code>POSTGRES_USER=${POSTGRES_USER}</code></li>
+<li><code>POSTGRES_PASSWORD=${POSTGRES_PASSWORD}</code></li>
+<li><code>POSTGRES_DB=${POSTGRES_DB}</code></li>
+<li><code>DATABASE_CONFIG_LOGGING=&quot;YES&quot;</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="aiagentshospitality-api">ai_agents_hospitality-api</h3>
+<ul>
+<li><strong>Description</strong>: AI-powered backend service for hospitality operations.</li>
+<li><strong>Build</strong>: Built from the context <code>../ai_agents_hospitality-api</code> using the <code>Dockerfile</code>.</li>
+<li><strong>Image</strong>: <code>ai_agents_hospitality-api</code></li>
+<li><strong>Container Name</strong>: <code>ai_agents_hospitality-api</code></li>
+<li><strong>Ports</strong>: <code>8001:8001</code></li>
+<li><strong>Depends On</strong>: Depends on the <code>bookings-db-data-loader</code> service.</li>
+<li><strong>Environment Variables</strong>:
+<ul>
+<li><code>ENVIRONMENT=development.localcontainer</code></li>
+<li><code>AI_AGENTIC_API_KEY=${AI_AGENTIC_API_KEY_WKSP_HOSPITALITY}</code></li>
+<li><code>POSTGRES_HOST=${POSTGRES_HOST}</code></li>
+<li><code>POSTGRES_PORT=${POSTGRES_PORT}</code></li>
+<li><code>POSTGRES_USER=${POSTGRES_USER}</code></li>
+<li><code>POSTGRES_PASSWORD=${POSTGRES_PASSWORD}</code></li>
+<li><code>POSTGRES_DB=${POSTGRES_DB}</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="project-components">Project Components</h2>
+<h3 id="hospitality-ai-agents-api"><a href="./ai_agents_hospitality-api/README.md">Hospitality AI Agents API</a></h3>
+<p>This component implements a FastAPI WebSocket API to interact with AI agents specialized in the hospitality sector. The agents are designed to process and respond to queries about different aspects of hotel management.</p>
+<p><strong>Specialized Agents Included:</strong></p>
+<ul>
+<li>Hotel Details Agent: Provides information about location, address, meal plans, charges, and discounts.</li>
+<li>Hotel Rooms Agent: Handles queries about room types, categories, pricing, and availability.</li>
+<li>Hotel Bookings Agent: Processes information about reservations, occupancy rates, and revenue calculations.</li>
+<li>Message Hotel Config Agent: Responds to queries about hotel configurations and pricing.</li>
+</ul>
+<p><a href="./ai_agents_hospitality-api/README.md">See more details about the AI Agents API →</a></p>
+<h3 id="bookings-database"><a href="./bookings-db/readme.md">Bookings Database</a></h3>
+<p>This component provides a PostgreSQL database for hotel bookings, along with a data loader that populates the database with generated synthetic data.</p>
+<p><strong>Main Features:</strong></p>
+<ul>
+<li>Generation of synthetic hotel and booking data</li>
+<li>Complete database schema for hotel and booking information</li>
+<li>Scripts for initial data loading</li>
+<li>Docker configuration for quick deployment</li>
+</ul>
+<p><a href="./bookings-db/readme.md">See more details about the Bookings Database →</a></p>
+<h3 id="docker-compose-configuration">Docker Compose Configuration</h3>
+<p><strong>This is the core component that orchestrates the entire application.</strong> All services run through Docker Compose - this is not just a deployment option, it's the primary and recommended way to use the system.</p>
+<p><strong>Complete Application Stack:</strong></p>
+<ul>
+<li>🗄️ <strong>bookings-db</strong>: PostgreSQL database service</li>
+<li>📊 <strong>bookings-db-data-loader</strong>: Service to initialize database with synthetic data</li>
+<li>🤖 <strong>ai_agents_hospitality-api</strong>: AI-powered backend service for hotel operations</li>
+</ul>
+<h2 id="%F0%9F%94%A7-setup--configuration">🔧 Setup &amp; Configuration</h2>
+<h3 id="%F0%9F%94%91-api-key-configuration">🔑 API Key Configuration</h3>
+<blockquote>
+<p><strong>IMPORTANT</strong>: Set the AI Agentic API key (or other credentials) as an environment variable. <strong>Never</strong> include it in <code>.env</code> files or commit it to version control for security reasons.</p>
+</blockquote>
+<h4 id="temporary-current-terminal-session-only">Temporary (current terminal session only)</h4>
+<pre class="hljs"><code><div><span class="hljs-built_in">export</span> AI_AGENTIC_API_KEY_WKSP_HOSPITALITY=your-api-key-here
+</div></code></pre>
+<h4 id="permanent-recommended-for-wsllinux">Permanent (recommended for WSL/Linux)</h4>
+<p>To avoid setting the environment variable every time you open a new terminal, add it to your <code>~/.bashrc</code> file (located in your user's home directory). This file is executed automatically when your Ubuntu/WSL session starts.</p>
+<ol>
+<li>Open the file:</li>
+</ol>
+<pre class="hljs"><code><div>nano ~/.bashrc
+</div></code></pre>
+<ol start="2">
+<li>Add the following block at the end of the file:</li>
+</ol>
+<pre class="hljs"><code><div><span class="hljs-comment">########################################</span>
+<span class="hljs-comment">### PERSONAL KEYS</span>
+<span class="hljs-comment">########################################</span>
+<span class="hljs-built_in">export</span> AI_AGENTIC_API_KEY_WKSP_HOSPITALITY=your-api-key-here
+<span class="hljs-comment">########################################</span>
+<span class="hljs-comment">### PERSONAL KEYS (end)</span>
+<span class="hljs-comment">########################################</span>
+</div></code></pre>
+<ol start="3">
+<li>
+<p>Save and exit (<code>Ctrl+X</code>, then <code>Y</code>, then <code>Enter</code>)</p>
+</li>
+<li>
+<p>Apply changes to your current session:</p>
+</li>
+</ol>
+<pre class="hljs"><code><div><span class="hljs-built_in">source</span> ~/.bashrc
+</div></code></pre>
+<blockquote>
+<p>💡 <strong>Tip</strong>: Using a dedicated section with clear comments (<code>### PERSONAL KEYS</code>) helps you organize and locate your custom environment variables easily.</p>
+</blockquote>
+<h3 id="starting-services-with-parameters">Starting Services with Parameters</h3>
+<p>The project includes a script at the root level (<code>start-app.sh</code>) that automates starting the services with various configuration options:</p>
+<pre class="hljs"><code><div>./start-app.sh [--logs|-l] [--buildnocache|-bn] [--build|-b] [--no_ai_agent|-na] [--force|-f] [--<span class="hljs-built_in">help</span>|-h]
+</div></code></pre>
+<h4 id="parameters">Parameters:</h4>
+<ul>
+<li><code>--logs</code> or <code>-l</code>: Captures logs continuously in background mode</li>
+<li><code>--buildnocache</code> or <code>-bn</code>: Performs docker-compose up with build and no cache</li>
+<li><code>--build</code> or <code>-b</code>: Performs docker-compose up with build using default cache</li>
+<li><code>--no_ai_agent</code> or <code>-na</code>: Starts only database services and skips the ai_agents_hospitality-api service</li>
+<li><code>--force</code> or <code>-f</code>: Forces execution even if containers are already running (USE WITH CAUTION)</li>
+<li><code>--help</code> or <code>-h</code>: Shows help information with all available options and examples</li>
+</ul>
+<p><strong>Note</strong>:</p>
+<ul>
+<li>The script checks for running containers before executing and will prevent accidental execution if containers are already running unless <code>--force</code> is specified</li>
+</ul>
+<h4 id="examples">Examples:</h4>
+<ol>
+<li><strong>Show Help Information:</strong></li>
+</ol>
+<pre class="hljs"><code><div>./start-app.sh --<span class="hljs-built_in">help</span>
+</div></code></pre>
+<p>This displays a complete help message with all available options and usage examples.</p>
+<ol start="2">
+<li><strong>Quick Start Mode (No parameters):</strong></li>
+</ol>
+<pre class="hljs"><code><div>./start-app.sh
+</div></code></pre>
+<p>This starts all containers without capturing logs and returns control to your terminal.</p>
+<ol start="3">
+<li><strong>Log Capture Mode:</strong></li>
+</ol>
+<pre class="hljs"><code><div>./start-app.sh --logs
+</div></code></pre>
+<p>This starts all containers and continuously captures logs to a file in the background.</p>
+<ol start="4">
+<li><strong>Build with No Cache:</strong></li>
+</ol>
+<pre class="hljs"><code><div>./start-app.sh --buildnocache
+</div></code></pre>
+<p>This rebuilds all containers without using the cache and then starts the services.</p>
+<ol start="5">
+<li><strong>Build with Cache:</strong></li>
+</ol>
+<pre class="hljs"><code><div>./start-app.sh --build
+</div></code></pre>
+<p>This rebuilds all containers using the cache and then starts the services.</p>
+<ol start="6">
+<li><strong>Skip AI Agent Service:</strong></li>
+</ol>
+<pre class="hljs"><code><div>./start-app.sh --no_ai_agent
+</div></code></pre>
+<p>This starts only the database services without the AI agent API service.</p>
+<ol start="7">
+<li><strong>Force Execution Even If Containers Are Running:</strong></li>
+</ol>
+<pre class="hljs"><code><div>./start-app.sh --force
+</div></code></pre>
+<p>This forces the script to continue execution even if containers from this docker-compose configuration are already running. Use with caution as it may cause issues with running containers.</p>
+<p>The script will:</p>
+<ul>
+<li>Start all services in detached mode</li>
+<li>Create a log file with timestamp in the <code>logs/</code> directory at project root (when using --logs)</li>
+<li>Capture logs according to the selected mode</li>
+<li>Automatically rotate logs when they reach 10MB</li>
+<li>Keep the 10 most recent log files</li>
+</ul>
+<p>You can view the logs in real time with:</p>
+<pre class="hljs"><code><div>tail -f logs/prj_hospitality_YYYYMMDD_HHMMSS.log
+</div></code></pre>
+<h2 id="%F0%9F%9B%91-stopping-the-application">🛑 Stopping the Application</h2>
+<p>Use the <code>stop-app.sh</code> script to stop the application:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># Stop containers (keep volumes)</span>
+./stop-app.sh
+
+<span class="hljs-comment"># Stop containers and remove volumes (deletes database data)</span>
+./stop-app.sh --remove-volumes
+
+<span class="hljs-comment"># Stop containers and remove images</span>
+./stop-app.sh --remove-images
+
+<span class="hljs-comment"># Complete cleanup (containers, volumes, images, network)</span>
+./stop-app.sh --clean-all
+
+<span class="hljs-comment"># Show help</span>
+./stop-app.sh --<span class="hljs-built_in">help</span>
+</div></code></pre>
+<p><strong>Options:</strong></p>
+<ul>
+<li><code>--remove-volumes, -v</code>: Remove volumes (database data will be lost)</li>
+<li><code>--remove-images, -i</code>: Remove built images</li>
+<li><code>--clean-all, -ca</code>: Complete cleanup (containers, volumes, images, and network)</li>
+<li><code>--help, -h</code>: Show help information</li>
+</ul>
+<h2 id="%F0%9F%93%8B-application-urls">📋 Application URLs</h2>
+<ul>
+<li><strong>Main API</strong>: http://localhost:8001</li>
+<li><strong>Database</strong>: localhost:5432 (PostgreSQL)</li>
+</ul>
+<h2 id="%F0%9F%8E%93-workshop-building-ai-agents">🎓 Workshop: Building AI Agents</h2>
+<p>This project includes a complete workshop for learning how to build AI agentic applications with LangChain.</p>
+<h3 id="workshop-overview">Workshop Overview</h3>
+<p><strong><a href="./WORKSHOP.md">📖 Full Workshop Guide →</a></strong></p>
+<p>The workshop is divided into two exercises:</p>
+<table>
+<thead>
+<tr>
+<th>Exercise</th>
+<th>Topic</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Exercise 0</strong></td>
+<td>File context for Hotel Details</td>
+<td>Introduction Agentic IA asssitant by passing hotel files (small sample) directly to context and building the first Agentic scaffolding</td>
+</tr>
+<tr>
+<td><strong>Exercise 1</strong></td>
+<td>RAG for Hotel Details</td>
+<td>Build a RAG agent to answer questions about hotels and rooms</td>
+</tr>
+<tr>
+<td><strong>Exercise 2</strong></td>
+<td>SQL Agent for Bookings</td>
+<td>Build an SQL agent to query and analyze booking data</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agent-architecture">Agent Architecture</h3>
+<pre class="hljs"><code><div>┌─────────────────────────────────────────────────────────────┐
+│                    User Query (WebSocket)                    │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+          ┌───────────────┴───────────────┐
+          │                               │
+┌─────────▼─────────┐         ┌───────────▼───────────┐
+│  Hotel Config     │         │  Bookings Analytics   │
+│  (RAG Agent)      │         │  (SQL Agent)          │
+└─────────┬─────────┘         └───────────┬───────────┘
+          │                               │
+          ▼                               ▼
+┌─────────────────────┐       ┌───────────────────────┐
+│   Vector Store      │       │     PostgreSQL        │
+│ (Hotels &amp; Rooms)    │       │     (Bookings)        │
+└─────────────────────┘       └───────────────────────┘
+</div></code></pre>
+<h3 id="quick-start-for-workshop">Quick Start for Workshop</h3>
+<pre class="hljs"><code><div><span class="hljs-comment"># 1. Generate synthetic data</span>
+python bookings-db/src/gen_synthetic_hotels.py
+
+<span class="hljs-comment"># 2. Start the mock API to test expected behavior</span>
+<span class="hljs-built_in">cd</span> ai_agents_hospitality-api &amp;&amp; python main.py
+
+<span class="hljs-comment"># 3. Access the chatbot at http://localhost:8001</span>
+</div></code></pre>
+<h2 id="%F0%9F%93%8B-prerequisites">📋 Prerequisites</h2>
+<h3 id="%F0%9F%96%A5%EF%B8%8F-platform-prerequisites">🖥️ Platform Prerequisites</h3>
+<h4 id="recommended-development-environment">Recommended Development Environment</h4>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Requirement</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Operating System</strong></td>
+<td>WSL2 with Ubuntu latest 24 for Windows or macOS</td>
+<td>WSL2 is the recommended environment for Windows users</td>
+</tr>
+<tr>
+<td><strong>Docker</strong></td>
+<td>Docker Engine + Docker Compose</td>
+<td>Must be installed <strong>inside WSL</strong> (not Docker Desktop for Windows)</td>
+</tr>
+<tr>
+<td><strong>Git</strong></td>
+<td>Git 2.52+</td>
+<td>Version control, default on Ubuntu 24</td>
+</tr>
+<tr>
+<td><strong>Python</strong></td>
+<td>Python 3.12+</td>
+<td>Required for workshop exercises and local development, default on Ubuntu 24</td>
+</tr>
+<tr>
+<td><strong>IDE</strong></td>
+<td>VS Code, or forked IDEs like Cursor, Windsurf, Antigravity</td>
+<td>Recommended with extensions listed below and remote WSL development</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ide-setup-recommended">IDE Setup (Recommended)</h4>
+<ul>
+<li><strong>Visual Studio Code</strong> with the following extensions:
+<ul>
+<li><strong>Remote - WSL</strong> (for Windows users): Enables development directly inside WSL</li>
+<li><strong>GitHub Copilot</strong>: AI-powered code completion and assistance</li>
+<li><strong>Python</strong>: Python language support</li>
+<li><strong>Docker</strong>: Docker file support and container management</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>💡 <strong>Important for Windows Users</strong>: Always open VS Code from within WSL (<code>code .</code> from WSL terminal) to ensure proper file system access and Docker integration.</p>
+</blockquote>
+<h3 id="%F0%9F%A7%A0-knowledge-prerequisites">🧠 Knowledge Prerequisites</h3>
+<p>To get the most out of this project and workshop, familiarity with the following is recommended:</p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Level</th>
+<th>Topics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Python</strong></td>
+<td>Intermediate</td>
+<td>Classes, async/await, virtual environments, pip/uv</td>
+</tr>
+<tr>
+<td><strong>Docker</strong></td>
+<td>Basic</td>
+<td>Containers, images, docker-compose, volumes</td>
+</tr>
+<tr>
+<td><strong>SQL</strong></td>
+<td>Basic</td>
+<td>SELECT, JOIN, WHERE, aggregate functions</td>
+</tr>
+<tr>
+<td><strong>REST APIs</strong></td>
+<td>Basic</td>
+<td>HTTP methods, WebSockets, JSON</td>
+</tr>
+<tr>
+<td><strong>AI/LLMs</strong></td>
+<td>Basic</td>
+<td>Understanding of LLMs, prompts, and embeddings</td>
+</tr>
+<tr>
+<td><strong>Git</strong></td>
+<td>Basic</td>
+<td>Clone, commit, push, branches</td>
+</tr>
+<tr>
+<td><strong>Agentic AI</strong></td>
+<td>Basic</td>
+<td>Agentic AI knowledge, Langchain/Langraph, RAG</td>
+</tr>
+</tbody>
+</table>
+<h3 id="%F0%9F%94%A7-required-accounts--api-keys">🔧 Required Accounts &amp; API Keys</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Purpose</th>
+<th>How to Obtain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OpenAI API Key</strong></td>
+<td>Powers the LangChain AI agents</td>
+<td><a href="https://platform.openai.com/api-keys">OpenAI Platform</a></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ <strong>Note</strong>: An OpenAI API or equivalent key with available credits is required to run the AI agents. The workshop exercises will make API calls that consume credits.</p>
+</blockquote>
+
+</body>
+</html>

@@ -164,5 +164,15 @@ Finalmente, en la función `handle_hotel_query_simple(user_query: str)` le pasam
 
 ## Pruebas
 
+A través de distints queries como pedir listados, información de las habitaciones y planes de comida se observa el flujo a través de los logs.
 
+- Se escribe la query en el html
+![
+](image.png)
+
+- El WebSocket conecta el backend con el fronted y la query llega al primero.
+
+- Al ejecutar `main.py` hacemos la llamada a `handle_hotel_query_simple` 
+
+- Tras la ejecución del flujo del agente (contexto + prompt + llm) la respuesta vuelve al frontend.
 

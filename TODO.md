@@ -81,14 +81,14 @@ When you complete a task, reference the commit like this:
 - [✅] Verify hotel files are created in `bookings-db/output_files/hotels/`
 
 #### Phase 2: Core Implementation
-- [ ] Create function to load hotel JSON file (`hotels.json`)
-- [ ] Create function to load hotel details markdown (`hotel_details.md`)
-- [ ] Implement `answer_hotel_question()` function with file context
-- [ ] Create ChatPromptTemplate with system prompt for hotel assistant
-- [ ] Build LangChain chain (prompt template + LLM)
+- [✅] Create function to load hotel JSON file (`hotels.json`)
+- [✅] Create function to load hotel details markdown (`hotel_details.md`)
+- [✅] Implement `answer_hotel_question()` function with file context
+- [✅] Create ChatPromptTemplate with system prompt for hotel assistant
+- [✅] Build LangChain chain (prompt template + LLM)
 
 #### Phase 3: Integration & Testing
-- [ ] Create `handle_hotel_query_simple()` async function for WebSocket API
+- [✅] Create `handle_hotel_query_simple()` async function for WebSocket API
 - [ ] Test with basic queries (hotel names, addresses, locations)
 - [ ] Test with meal plan queries
 - [ ] Test with room information queries

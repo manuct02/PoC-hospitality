@@ -75,4 +75,94 @@ python3 ./bookings-db/src/gen_synthetic_hotels.py
 
 Aquí ya indagamos en el funcionaminto del agente `hotel_simple_agent.py` dentro de `ai_agents_hospitality`
 
+### Load del contexto
+
+- De un contenedor, ya sea el local en `/data` o el externo de los datos sintéticos generados necesitamos cargar el `hotels.json` con los datos pertinentes de los hoteles que se hayan generado. 
+
+- Para usar los datos sintéticos nos cargamos este `if` dentro de la función que obiene la ruta de los datos `get_hotels_data_path()`
+```python
+if HOTELS_DATA_PATH_LOCAL.exists() and (HOTELS_DATA_PATH_LOCAL / "hotels.json").exists():
+        logger.info(f"Using local hotel data path: {HOTELS_DATA_PATH_LOCAL}")
+        return HOTELS_DATA_PATH_LOCAL
+```
+ - La función que carga los datos, sean sintéticos o no:
+
+```python
+def load_hotel_data() -> Tuple[dict, str]:
+```
+
+- Usa `get_hotels_data_path()` para decidir la ruta.
+- Maneja los errores.
+- Carga los datos
+
+```python
+hotels_json_file = hotels_data_path / "hotels.json"
+
+with open(hotels_json_file, 'r', encoding='utf-8') as f:
+    _hotels_data = json.load(f)
+```
+
+En la misma función se gestionan los datos de los hoteles :
+
+```python
+hotel_details_file = hotels_data_path / "hotel_details.md"
+
+with open(hotel_details_file, 'r', encoding='utf-8') as f:
+        _hotel_details_text = f.read()
+```
+
+Al cargar estos dos ficheros, ya sean locales o los externos, estamos añadiendo contexto al prompt que usará el agente para contestar a la query sin necesidad de RAG.
+
+### Cadena de Langchain
+
+Establecemos la configuración del agente creando una cadena de langchain en la función `_create_agent_chain()`:
+
+- El llm valoramos la posibilidad de emplear una API de OpenAI o de Google.
+```python
+if config.provider == "openai":
+    llm = ChatOpenAI(
+            model=config.model,
+            temperature=config.temperature,
+            api_key=config.api_key
+        )
+else:
+        # Standard Gemini API usage
+        llm = ChatGoogleGenerativeAI(
+            model=config.model,
+            temperature=config.temperature,
+            google_api_key=config.api_key
+        )
+```
+
+- Una configuración de prompt usando el método `.from_messages` sobre un objeto `ChatPromptTemplate`. Su usa dentro del prompt `hotel_context` que no es más que el .md con los detalles de los hoteles y la `question` del user.
+
+- Finalmente tenemos la cadena simple de langchain:
+```python
+_agent_chain = prompt_template | llm
+```
+
+### Contestar la question
+
+Con la función `answer_hotel_question(question:str)` recuperamos la cadena de langchain y le pasamos al contexto los detalles del hotel (`hotel_context`) y preguntas pertinentes. Además añadimos al contexto el `json.dump` de los datos estructurados del hotel (`hotels.json`). (Aunque no sé muy bien dónde se usa este json.dump dentro del prompt/contexto la verdad)
+
+```python
+
+chain = _create_agent_chain()
+        
+        # Invoke the chain
+        logger.info(f"Processing question: {question[:100]}...")
+        response = chain.invoke({
+            "hotel_context": hotel_context,
+            "question": question
+        })
+        return response.content
+```
+
+donde el return es el texto plano del `invoke` del modelo.
+
+Finalmente, en la función `handle_hotel_query_simple(user_query: str)` le pasamos la query del usuario y ésta devuelve el resultado de `answer_hotel_question(question:str)` usando `user_query`a modo de `question`.
+
+## Pruebas
+
+
 

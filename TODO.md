@@ -75,10 +75,10 @@ When you complete a task, reference the commit like this:
 ### Exercise 0: Simple Agentic Assistant with File Context
 
 #### Phase 1: Setup & Data Preparation
-- [ ] Install LangChain dependencies (`langchain`, `langchain-google-genai`)
-- [ ] Configure Google Gemini API key as environment variable (`AI_AGENTIC_API_KEY`)
-- [ ] Generate synthetic hotel data (3 hotels) using `gen_synthetic_hotels.py`
-- [ ] Verify hotel files are created in `bookings-db/output_files/hotels/`
+- [✅]Install LangChain dependencies (`langchain`, `langchain-google-genai`)
+- [✅] Configure Google Gemini API key as environment variable (`AI_AGENTIC_API_KEY`)
+- [✅] Generate synthetic hotel data (3 hotels) using `gen_synthetic_hotels.py`
+- [✅] Verify hotel files are created in `bookings-db/output_files/hotels/`
 
 #### Phase 2: Core Implementation
 - [ ] Create function to load hotel JSON file (`hotels.json`)

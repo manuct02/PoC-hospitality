@@ -99,7 +99,7 @@ def get_or_create_vectorstore(force_rebuild: bool= False):
     # Si ya está cargado enla memoria que lo devuelva
     if _vectorstore is not None and not force_rebuild:
         logger.info("Using cached vectorstore from memory")
-        return -_vectorstore
+        return _vectorstore
     
     # Configurar los embeddings (modelo de google)
     agent_config= get_agent_config()

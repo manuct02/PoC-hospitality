@@ -12,7 +12,7 @@ from agents.hotel_rag_agent import handle_hotel_query_rag
 async def test_phase3():
     print("\n🧪 Testing Phase 3: RAG Chain\n")
     
-    query = "List hotels in Nice"
+    query = "Cuántas habitaciones hay en total en los hoteles de París?"
     print(f"Query: {query}\n")
     
     try:

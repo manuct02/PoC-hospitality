@@ -178,6 +178,7 @@ Important guidelines:
 - If comparing hotels, present the information in a clear format
 - Always mention the currency (€) for prices
 - If asked about availability or bookings, remind that you can only provide information, not make reservations
+- ONLY answer based on the context provided. If location is not mentioned, say you don't have that information
 """
     # Crear la plantilla del prompt
 

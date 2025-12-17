@@ -31,6 +31,15 @@ This project provides a PostgreSQL database for hotel bookings, along with a dat
 │   ├── generate_hotels_param.yaml
 │   └── hotel_queries.yaml
 ├── output/
+│   ├── hotels/
+│   │   ├── hotels.json
+│   │   ├── hotels.xlsx
+│   │   ├── hotels.csv
+│   │   ├── all_hotels.csv
+│   │   ├── hotel_details.md
+│   │   ├── hotel_rooms.md
+│   │   ├── hotel_room_queries.csv
+│   │   └── hotel_bookings.md
 │   └── bookings/
 │       └── all_bookings.xlsx
 ├── Dockerfile

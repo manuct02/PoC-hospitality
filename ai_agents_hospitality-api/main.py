@@ -3,9 +3,12 @@ FastAPI application for hosting a WebSocket-based chat interface.
 
 This module provides a FastAPI application that serves as a WebSocket server for real-time
 communication. It includes endpoints for serving the main web interface
-and handling WebSocket connections for chat interactions with hardcoded responses.
+and handling WebSocket connections for chat interactions.
 
-This is a starter template for a workshop to implement LangChain agents.
+Exercise 0 Implementation:
+- Uses LangChain agent with file context (3 hotels sample)
+- Falls back to hardcoded responses if agent is unavailable
+- Integrates with WebSocket API for real-time chat
 """
 
 import json
@@ -18,6 +21,27 @@ from fastapi.templating import Jinja2Templates
 
 from util.logger_config import logger
 from util.configuration import settings, PROJECT_ROOT
+
+# Import Exercise 0 agent
+EXERCISE_0_AVAILABLE = False
+try:
+    from agents.hotel_simple_agent import handle_hotel_query_simple, load_hotel_data
+    # Try to load hotel data to verify everything is set up correctly
+    try:
+        load_hotel_data()
+        EXERCISE_0_AVAILABLE = True
+        logger.info("✅ Exercise 0 agent loaded successfully and hotel data verified")
+    except Exception as e:
+        logger.warning(f"Exercise 0 agent code loaded but data/files not ready: {e}")
+        logger.warning("Will use hardcoded responses until hotel data is available")
+        EXERCISE_0_AVAILABLE = False
+except ImportError as e:
+    logger.warning(f"Exercise 0 agent not available (ImportError): {e}")
+    logger.warning("Using hardcoded responses. Install LangChain dependencies if needed.")
+    EXERCISE_0_AVAILABLE = False
+except Exception as e:
+    logger.warning(f"Error loading Exercise 0 agent: {e}. Using hardcoded responses.")
+    EXERCISE_0_AVAILABLE = False
 
 
 # Hardcoded responses for demo queries
@@ -182,8 +206,10 @@ async def websocket_endpoint(websocket: WebSocket, uuid: str):
     Handle WebSocket connections for real-time chat.
 
     This endpoint establishes a WebSocket connection and handles
-    bidirectional communication between the client and the server
-    with hardcoded responses.
+    bidirectional communication between the client and the server.
+    
+    Uses Exercise 0 agent (LangChain with file context) if available,
+    otherwise falls back to hardcoded responses.
 
     Args:
         websocket (WebSocket): The WebSocket connection instance.
@@ -206,8 +232,20 @@ async def websocket_endpoint(websocket: WebSocket, uuid: str):
                 except json.JSONDecodeError:
                     user_query = data
                 
-                # Get hardcoded response
-                response_content = find_matching_response(user_query)
+                # Get response from Exercise 0 agent or fallback to hardcoded
+                if EXERCISE_0_AVAILABLE:
+                    try:
+                        logger.info(f"Using Exercise 0 agent for query: {user_query[:100]}...")
+                        response_content = await handle_hotel_query_simple(user_query)
+                        logger.info(f"✅ Exercise 0 agent response generated successfully for {uuid}")
+                    except Exception as e:
+                        logger.error(f"❌ Error in Exercise 0 agent: {e}", exc_info=True)
+                        logger.warning(f"Falling back to hardcoded response for {uuid}")
+                        response_content = find_matching_response(user_query)
+                else:
+                    # Fallback to hardcoded responses
+                    logger.debug(f"Using hardcoded responses (Exercise 0 not available) for {uuid}")
+                    response_content = find_matching_response(user_query)
                 
                 # Send response back to client
                 agent_message = {

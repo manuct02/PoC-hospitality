@@ -13,6 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code into the container
 COPY . .
 
+# Ensure data directory exists (for hotel data files)
+RUN mkdir -p /app/data/hotels
+
 # Make the start script executable for proper signal handling
 RUN chmod +x start.sh
 

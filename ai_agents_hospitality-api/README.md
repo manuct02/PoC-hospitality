@@ -133,7 +133,7 @@ docker run -p 8001:8001 \
 
 1. **Instalar LangChain:**
    ```bash
-   pip install langchain langchain-openai
+   pip install langchain langchain-google-genai
    ```
 
 2. **Crear Agentes:**

@@ -138,18 +138,18 @@ Build a simple AI agentic assistant that answers questions about hotels configur
 
 1. Install LangChain dependencies:
 ```bash
-pip install langchain langchain-openai
+pip install langchain langchain-google-genai
 ```
 
-2. Set up your OpenAI API key:
+2. Set up your API credentials:
 ```bash
-export OPENAI_API_KEY=your-api-key-here
+export AI_AGENTIC_API_KEY=your-api-key-here
 ```
 
-3. Generate a small sample of hotel data (3 hotels):
+3. Generate a small sample of hotel data (5 hotels -> set param num_of_hotels: 5 at generate_hotels_param.yaml) :
 ```bash
 cd bookings-db
-python src/gen_synthetic_hotels.py --num_hotels 3
+python src/gen_synthetic_hotels.py
 ```
 
 This will create hotel files in `bookings-db/output_files/hotels/` with a small sample.
@@ -178,10 +178,11 @@ with open(hotel_details_file, 'r', encoding='utf-8') as f:
 Create a basic agent that uses the loaded files as context:
 
 ```python
-from langchain_openai import ChatOpenAI
+import os
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import ChatPromptTemplate
 
-llm = ChatOpenAI(model="gpt-4", temperature=0)
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", temperature=0, google_api_key=os.getenv("AI_AGENTIC_API_KEY"))
 
 # Create a prompt template that includes the hotel context
 prompt_template = ChatPromptTemplate.from_messages([
@@ -279,8 +280,8 @@ async def handle_hotel_query_simple(user_query: str) -> str:
 ### 📋 Plan
 
 #### Phase 1: Setup & Data Preparation
-- [ ] Install LangChain dependencies (`langchain`, `langchain-openai`)
-- [ ] Configure OpenAI API key as environment variable
+- [ ] Install LangChain dependencies (`langchain`, `langchain-google-genai`)
+- [ ] Configure Google Gemini API key as environment variable (`AI_AGENTIC_API_KEY`)
 - [ ] Generate synthetic hotel data (3 hotels) using `gen_synthetic_hotels.py`
 - [ ] Verify hotel files are created in `bookings-db/output_files/hotels/`
 
@@ -327,18 +328,18 @@ Implement a RAG (Retrieval Augmented Generation) agent that can answer questions
 
 1. Install LangChain dependencies:
 ```bash
-pip install langchain langchain-openai langchain-community chromadb
+pip install langchain langchain-google-genai langchain-community chromadb
 ```
 
-2. Set up your OpenAI API key:
+2. Set up your Google Gemini API key:
 ```bash
-export OPENAI_API_KEY=your-api-key-here
+export AI_AGENTIC_API_KEY=your-api-key-here
 ```
 
-3. Generate the full hotel dataset (50 hotels):
+3. Generate the full hotel dataset (50 hotels -> set param num_of_hotels: 50 at generate_hotels_param.yaml):
 ```bash
 cd bookings-db
-python src/gen_synthetic_hotels.py --num_hotels 50
+python src/gen_synthetic_hotels.py
 ```
 
 ### Step 1: Prepare the Data for RAG
@@ -354,9 +355,10 @@ The hotel data needs to be loaded into a vector store. Use the generated files w
 
 ```python
 from langchain_community.document_loaders import JSONLoader, TextLoader
-from langchain_openai import OpenAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+import os
 
 # Load hotel data
 # TODO: Implement document loading from hotels.json
@@ -368,17 +370,18 @@ text_splitter = RecursiveCharacterTextSplitter(
 )
 
 # Create embeddings and vector store
-embeddings = OpenAIEmbeddings()
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=os.getenv("AI_AGENTIC_API_KEY"))
 vectorstore = Chroma.from_documents(documents, embeddings)
 ```
 
 ### Step 3: Create the RAG Chain
 
 ```python
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import RetrievalQA
+import os
 
-llm = ChatOpenAI(model="gpt-4", temperature=0)
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", temperature=0, google_api_key=os.getenv("AI_AGENTIC_API_KEY"))
 
 # Create retrieval chain
 # TODO: Implement the RAG chain with proper prompting
@@ -411,12 +414,12 @@ Create an agent that:
 - [ ] Implement document loader for `hotel_details.md` (TextLoader)
 - [ ] Implement document loader for `hotel_rooms.md` (TextLoader)
 - [ ] Configure RecursiveCharacterTextSplitter (chunk_size=1000, overlap=200)
-- [ ] Create OpenAI embeddings instance
+- [ ] Create GoogleGenerativeAIEmbeddings instance
 - [ ] Build ChromaDB vector store from all documents
 - [ ] Persist vector store to disk for reuse
 
 #### Phase 3: RAG Chain Implementation
-- [ ] Create ChatOpenAI LLM instance (gpt-4, temperature=0)
+- [ ] Create ChatGoogleGenerativeAI LLM instance (gemini-2.5-flash-lite, temperature=0)
 - [ ] Implement RetrievalQA chain with vector store
 - [ ] Design system prompt for hotel assistant context
 - [ ] Configure retrieval parameters (k=5 documents)

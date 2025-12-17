@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   bookings-db:
     image: postgres:15.3

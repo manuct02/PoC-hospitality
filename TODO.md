@@ -75,8 +75,8 @@ When you complete a task, reference the commit like this:
 ### Exercise 0: Simple Agentic Assistant with File Context
 
 #### Phase 1: Setup & Data Preparation
-- [ ] Install LangChain dependencies (`langchain`, `langchain-openai`)
-- [ ] Configure OpenAI API key as environment variable
+- [ ] Install LangChain dependencies (`langchain`, `langchain-google-genai`)
+- [ ] Configure Google Gemini API key as environment variable (`AI_AGENTIC_API_KEY`)
 - [ ] Generate synthetic hotel data (3 hotels) using `gen_synthetic_hotels.py`
 - [ ] Verify hotel files are created in `bookings-db/output_files/hotels/`
 
@@ -113,12 +113,12 @@ When you complete a task, reference the commit like this:
 - [ ] Implement document loader for `hotel_details.md` (TextLoader)
 - [ ] Implement document loader for `hotel_rooms.md` (TextLoader)
 - [ ] Configure RecursiveCharacterTextSplitter (chunk_size=1000, overlap=200)
-- [ ] Create OpenAI embeddings instance
+- [ ] Create GoogleGenerativeAIEmbeddings instance
 - [ ] Build ChromaDB vector store from all documents
 - [ ] Persist vector store to disk for reuse
 
 #### Phase 3: RAG Chain Implementation
-- [ ] Create ChatOpenAI LLM instance (gpt-4, temperature=0)
+- [ ] Create ChatGoogleGenerativeAI LLM instance (gemini-2.5-flash-lite, temperature=0)
 - [ ] Implement RetrievalQA chain with vector store
 - [ ] Design system prompt for hotel assistant context
 - [ ] Configure retrieval parameters (k=5 documents)

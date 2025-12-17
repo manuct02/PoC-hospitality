@@ -85,3 +85,60 @@ def split_documents(documents: List)->List:
     logger.info(f"Split {len(documents)} documents into {len(chunks)} chunks")
     
     return chunks
+
+def get_or_create_vectorstore(force_rebuild: bool= False):
+    '''
+    Docstring for get_or_create_vectorstore
+    
+    :param force_rebuild: Description
+    :type force_rebuild: bool
+    '''
+
+    global _vectorstore
+
+    # Si ya está cargado enla memoria que lo devuelva
+    if _vectorstore is not None and not force_rebuild:
+        logger.info("Using cached vectorstore from memory")
+        return -_vectorstore
+    
+    # Configurar los embeddings (modelo de google)
+    agent_config= get_agent_config()
+    embeddings= GoogleGenerativeAIEmbeddings(model= "models/embedding-001", api_key= agent_config.api_key)
+
+    # Si está en el disco los cargamos desde ahí para no estar rebuildeando el modelo
+
+    if VECTOR_STORE_PATH.exists() and not force_rebuild:
+        logger.info(f"Loading existing vectorstore from {VECTOR_STORE_PATH}")
+        _vectorstore = Chroma(
+            persist_directory=str(VECTOR_STORE_PATH),
+            embedding_function=embeddings
+        )
+        logger.info("Vectorstore loaded successfully from disk")
+        return _vectorstore
+    
+    # Si no existe lo creamos de 0
+
+    logger.info("Creating new vector store...")
+
+    # 1 Carga de documentos
+
+    documents= load_hotel_documents()
+    if not documents:
+        raise ValueError("No documents loaded. cannot create embeddings")
+    
+    # 2 Chunkear los documents
+    chunks= split_documents(documents)
+    logger.info(f"Processing {len(chunks)} chunks for embedding...")
+
+    # 3 Crear vectorstore con ChromaDB
+    _vectorstore= Chroma.from_documents(documents= chunks,
+        embedding= embeddings,
+        persist_directory= str(VECTOR_STORE_PATH))
+    
+    logger.info(f"Vectorstore created and persisted to {VECTOR_STORE_PATH}")
+    return _vectorstore
+        
+
+
+    
+

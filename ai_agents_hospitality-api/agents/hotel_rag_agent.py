@@ -137,6 +137,105 @@ def get_or_create_vectorstore(force_rebuild: bool= False):
     
     logger.info(f"Vectorstore created and persisted to {VECTOR_STORE_PATH}")
     return _vectorstore
+
+def create_rag_chain():
+
+    global _rag_chain
+
+    #si ya existe la devolvemos
+
+    if _rag_chain is not None:
+        logger.info("Using cached RAG chain")
+        return _rag_chain
+    
+    agent_config= get_agent_config()
+
+    # Crear el LLm instance
+
+    llm= ChatGoogleGenerativeAI(
+        model= agent_config.model,
+        temperature= agent_config.temperature,
+        google_api_key= agent_config.api_key
+    )
+
+    # Obetener el vectorstore y crear retriever
+
+    vectorstore= get_or_create_vectorstore()
+
+    # Hacer el prompt
+
+    system_prompt = """You are a helpful and knowledgeable hotel assistant.
+Your job is to answer questions about hotels, rooms, prices, and availability.
+
+Use the following context to answer the user's question accurately and concisely.
+If you cannot find the information in the context, politely say so.
+
+Context:
+{context}
+
+Important guidelines:
+- Be specific with prices, room types, and hotel names
+- If comparing hotels, present the information in a clear format
+- Always mention the currency (€) for prices
+- If asked about availability or bookings, remind that you can only provide information, not make reservations
+"""
+    # Crear la plantilla del prompt
+
+    prompt_template= ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        ("user", "{question}")
+    ])
+
+    # guardar en el cache
+
+    _rag_chain= {"llm": llm, "vectorstore": vectorstore, "prompt": prompt_template}
+    logger.info("RAG chain created succesfully")
+    return _rag_chain
+
+async def handle_hotel_query_rag(query: str)-> str:
+    '''
+    Procesa la consulta usando el RAG
+
+      - input: query del usuario
+      - output: respuesta basada en el contexto recuperado
+    '''
+
+    try:
+        # 1 Obtener la cadena de RAG
+        rag_chain= create_rag_chain()
+        llm= rag_chain.get("llm")
+        vectorstore = rag_chain.get("vectorstore")
+        prompt_template= rag_chain.get("prompt")
+
+        # 2 Recuperar los documentos más relevantes para el contexto
+        logger.info(f"Processing query: {query}")
+        relevant_docs= vectorstore.similarity_search(query, k=5)
+        logger.info(f"Found {len(relevant_docs)} relevant documents")
+
+        # 3 Cnstruir el contexto
+
+        context= "\n\n".join([doc.page_content for doc in relevant_docs])
+
+        # 4 Crear prompt con contexto
+
+        messages= prompt_template.format_messages(
+            context= context, 
+            question= query
+            )
+        
+        # 5 Respuesta
+        
+        response= llm.invoke(messages)
+
+        logger.info("Response generated successfully")
+        return response.content
+    
+    except Exception as e:
+        logger.error(f"Error processing RAG query: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"Sorry, I encountered an error: {str(e)}"
+
         
 
 

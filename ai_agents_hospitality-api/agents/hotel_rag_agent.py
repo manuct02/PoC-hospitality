@@ -138,6 +138,74 @@ def get_or_create_vectorstore(force_rebuild: bool= False):
     logger.info(f"Vectorstore created and persisted to {VECTOR_STORE_PATH}")
     return _vectorstore
 
+'''============== AGENTE RIBUSTO ================='''
+
+def load_hotels_data():
+    '''
+    carga los datos de hoteles dentro del JSON
+    Devuelve un diccionario con los datos de los hoteles {'Hotels': [...]}
+    '''
+
+    global _hotels_data_cache
+    if '_hotels_data_cache' not in globals() or _hotels_data_cache is None:
+        json_path = DATA_PATH / "hotels.json"
+        with open(json_path, 'r', encoding='utf-8') as f:
+            _hotels_data_cache = json.load(f)
+    
+    return _hotels_data_cache
+
+@tool
+def search_hotels_by_city(city: str)->str:
+    '''
+    Busca hoteles de una ciudad específica, el agente debe usar esta herramienta
+    cuando se le prgunte por hoteles en ciudades particulares
+      - input: el nombre de una ciudad 'str'
+      - output: información formateada sobre los hoteles en la ciudad
+    '''
+
+    try:
+        data= load_hotels_data()
+        hotels= data.get('Hotels', [])
+
+        city_hotels= [
+            h for h in hotels
+            if h.get('Address', {}).get('City', '').lower() == city.lower()
+        ]
+
+        if not city_hotels:
+            available_cities = set(h.get('Address', {}).get('City', '') for h in hotels)
+            return f"No hotels found in {city}. Available cities: {', '.join(sorted(available_cities))}"
+   
+        # Formatear la respuesta
+        result= f"## Hotels in {city}\n\n"
+        for hotel in city_hotels:
+            name= hotel.get('Name', 'Unknown')
+            address= hotel.get('Address', {})
+            result += f"**{name}**\n"
+            result += f"- Address: {address.get('Address', 'N/A')}\n"
+            result += f"- Zip Code: {address.get('ZipCode', 'N/A')}\n\n"
+        
+        result += f"Total: {len(city_hotels)} hotels"
+        return result
+        
+    except Exception as e:
+        return f"Error searching hotels: {str(e)}"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def create_rag_chain():
 
     global _rag_chain

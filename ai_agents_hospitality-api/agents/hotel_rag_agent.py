@@ -14,6 +14,7 @@ from langchain_community.vectorstores import Chroma
 '''Prompt y chains de langchain'''
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.tools import tool
 
 from util.configuration import PROJECT_ROOT
 from util.logger_config import logger
@@ -25,6 +26,7 @@ VECTOR_STORE_PATH = PROJECT_ROOT / "vector_store"
 
 _rag_chain= None
 _vectorstore= None
+_hotels_data_cache = None  
 
 def load_hotel_documents()-> List:
     '''
@@ -154,7 +156,6 @@ def load_hotels_data():
     
     return _hotels_data_cache
 
-@tool
 def search_hotels_by_city(city: str)->str:
     '''
     Busca hoteles de una ciudad específica, el agente debe usar esta herramienta
@@ -193,17 +194,143 @@ def search_hotels_by_city(city: str)->str:
 
 
 
+def count_rooms(city: str = None, hotel_name: str = None, room_type: str = None) -> str:
+    """
+    Cuenta las habitaciones del hotel aplicando según qué filtros
+    
+    Args:
+        city: filtrar por el nombre de la ciudad (optional)
+        hotel_name: filtrar por el nombre del hotel (optional)
+        room_type: filtrar por el tipo de habitación: individual, doble, triple... (optional)
+        
+    Returns:
+        Total de habitaciones para los filtros
+    """
+    try:
+        data = load_hotels_data()
+        hotels = data.get('Hotels', [])
+        
+        total_rooms = 0
+        filtered_hotels = []
+        
+        for hotel in hotels:
+            if city and hotel.get('Address', {}).get('City', '').lower() != city.lower():
+                continue
+            
+            if hotel_name and hotel_name.lower() not in hotel.get('Name', '').lower():
+                continue
+            
+            filtered_hotels.append(hotel)
+            rooms = hotel.get('Rooms', [])
+            
+            if room_type:
+                rooms = [r for r in rooms if r.get('Type', '').lower() == room_type.lower()]
+            
+            total_rooms += len(rooms)
+        
+        filters_desc = []
+        if city:
+            filters_desc.append(f"in {city}")
+        if hotel_name:
+            filters_desc.append(f"hotel: {hotel_name}")
+        if room_type:
+            filters_desc.append(f"type: {room_type}")
+        
+        filters_text = " ".join(filters_desc) if filters_desc else "all hotels"
+        
+        result = f"## Room Count\n\n"
+        result += f"**Total rooms {filters_text}:** {total_rooms}\n"
+        result += f"**Hotels found:** {len(filtered_hotels)}\n"
+        
+        return result
+        
+    except Exception as e:
+        return f"Error counting rooms: {str(e)}"
+    
 
+def get_room_prices(city: str = None, room_type: str = None, category: str = None) -> str:
+    """
+    Coger el precio de la habitación con filtros.
 
-
-
-
-
-
-
-
-
-
+    Usar esta herramienta para cuestiones sobre precios y temporadas
+    
+    Args:
+        city: filtrar por ciudad (optional)
+        room_type: filtrar por tipo de habitación - "Single", "Double", or "Triple" (optional)
+        category: filtrar por categoría - "Standard" or "Premium" (optional)
+        
+    Returns:
+        Precio formateado para las habitaciones filtradas
+    """
+    try:
+        data = load_hotels_data()
+        hotels = data.get('Hotels', [])
+        
+        results = []
+        
+        for hotel in hotels:
+            if city and hotel.get('Address', {}).get('City', '').lower() != city.lower():
+                continue
+            
+            hotel_name = hotel.get('Name', 'Unknown')
+            rooms = hotel.get('Rooms', [])
+            
+            for room in rooms:
+                if room_type and room.get('Type', '').lower() != room_type.lower():
+                    continue
+                if category and room.get('Category', '').lower() != category.lower():
+                    continue
+                
+                results.append({
+                    'hotel': hotel_name,
+                    'city': hotel.get('Address', {}).get('City', 'Unknown'),
+                    'type': room.get('Type', 'N/A'),
+                    'category': room.get('Category', 'N/A'),
+                    'guests': room.get('Guests', 'N/A'),
+                    'price_off': room.get('PriceOffSeason', 0),
+                    'price_peak': room.get('PricePeakSeason', 0)
+                })
+        
+        if not results:
+            return "No rooms found matching the criteria."
+        
+        result = f"## Room Prices\n\n"
+        
+        filters = []
+        if city:
+            filters.append(f"City: {city}")
+        if room_type:
+            filters.append(f"Type: {room_type}")
+        if category:
+            filters.append(f"Category: {category}")
+        
+        if filters:
+            result += f"**Filters:** {', '.join(filters)}\n\n"
+        
+        # Agrupar por hotel
+        hotels_data = {}
+        for r in results:
+            hotel_key = r['hotel']
+            if hotel_key not in hotels_data:
+                hotels_data[hotel_key] = []
+            hotels_data[hotel_key].append(r)
+        
+        for hotel_name, rooms in hotels_data.items():
+            result += f"### {hotel_name}\n\n"
+            for room in rooms[:5]:
+                result += f"- **{room['category']} {room['type']}** (Guests: {room['guests']})\n"
+                result += f"  - Off Season: €{room['price_off']:.2f}/night\n"
+                result += f"  - Peak Season: €{room['price_peak']:.2f}/night\n\n"
+            
+            if len(rooms) > 5:
+                result += f"  _(... and {len(rooms) - 5} more rooms)_\n\n"
+        
+        result += f"**Total rooms found:** {len(results)}\n"
+        
+        return result
+        
+    except Exception as e:
+        return f"Error getting prices: {str(e)}"
 
 
 def create_rag_chain():

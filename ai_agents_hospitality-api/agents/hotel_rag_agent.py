@@ -20,6 +20,9 @@ from util.configuration import PROJECT_ROOT
 from util.logger_config import logger
 from config.agent_config import get_agent_config
 
+from langchain_core.agents import AgentAction, AgentFinish
+from langchain_core.prompts import PromptTemplate
+
 '''Las rutas de los datos y el almacén de vectores'''
 DATA_PATH = PROJECT_ROOT.parent / "bookings-db" / "output_files" / "hotels"
 VECTOR_STORE_PATH = PROJECT_ROOT / "vector_store"
@@ -27,6 +30,11 @@ VECTOR_STORE_PATH = PROJECT_ROOT / "vector_store"
 _rag_chain= None
 _vectorstore= None
 _hotels_data_cache = None  
+
+
+'''========================= LOADER ============================='''
+
+
 
 def load_hotel_documents()-> List:
     '''
@@ -69,6 +77,11 @@ def load_hotel_documents()-> List:
     logger.info(f"Total documents loaded: {len(documents)}")
     return documents
 
+
+
+''' ====================================== CHUNKING =========================================='''
+
+
 def split_documents(documents: List)->List:
     '''
     Splitear los documents en chunks de menor tamaño
@@ -87,6 +100,14 @@ def split_documents(documents: List)->List:
     logger.info(f"Split {len(documents)} documents into {len(chunks)} chunks")
     
     return chunks
+
+
+
+
+''' ======================= CHROMADB EMBEDDINGS/VECTORSTORE ================================='''
+
+
+
 
 def get_or_create_vectorstore(force_rebuild: bool= False):
     '''
@@ -140,7 +161,11 @@ def get_or_create_vectorstore(force_rebuild: bool= False):
     logger.info(f"Vectorstore created and persisted to {VECTOR_STORE_PATH}")
     return _vectorstore
 
-'''============== AGENTE RIBUSTO ================='''
+
+
+'''================================= HERRAMIENTAS ============================='''
+
+
 
 def load_hotels_data():
     '''
@@ -156,6 +181,7 @@ def load_hotels_data():
     
     return _hotels_data_cache
 
+@tool
 def search_hotels_by_city(city: str)->str:
     '''
     Busca hoteles de una ciudad específica, el agente debe usar esta herramienta
@@ -193,7 +219,7 @@ def search_hotels_by_city(city: str)->str:
         return f"Error searching hotels: {str(e)}"
 
 
-
+@tool
 def count_rooms(city: str = None, hotel_name: str = None, room_type: str = None) -> str:
     """
     Cuenta las habitaciones del hotel aplicando según qué filtros
@@ -247,7 +273,7 @@ def count_rooms(city: str = None, hotel_name: str = None, room_type: str = None)
     except Exception as e:
         return f"Error counting rooms: {str(e)}"
     
-
+@tool
 def get_room_prices(city: str = None, room_type: str = None, category: str = None) -> str:
     """
     Coger el precio de la habitación con filtros.
@@ -331,6 +357,97 @@ def get_room_prices(city: str = None, room_type: str = None, category: str = Non
         
     except Exception as e:
         return f"Error getting prices: {str(e)}"
+    
+
+
+''' ================================= AGENTE ========================================='''
+
+def create_hotel_agent():
+    '''
+    Crear el agente de hoteles capaz de llamar a las tools cuando toque
+    '''
+
+    # 1 Configuración del LLM
+
+    agent_config= get_agent_config()
+    llm= ChatGoogleGenerativeAI(model= agent_config.model, temperature= 0, google_api_key= agent_config.api_key)
+
+    # 2 Definir las tools
+
+    tools= [ search_hotels_by_city, count_rooms, get_room_prices]
+
+    # 3 El binding de las tools
+
+    llm_with_tools= llm.bind_tools(tools= tools)
+
+    logger.info("Hotel agent with tools created successfully")
+    return llm_with_tools
+
+async def invoke_agent_eith_tools(query: str)-> str:
+    '''
+    El invoke al agente con tools para responder
+      
+      - input: query del usuario
+      - output: respuesta del agente
+    '''
+
+    try:
+        # obtener el llm con tools
+        llm_with_tools= create_hotel_agent()
+        # sistema de mansajes
+        messages = [
+            ("system", """You are a helpful hotel assistant with access to specialized tools.
+
+When the user asks:
+- About hotels in a specific city → use search_hotels_by_city
+- "How many rooms" or counting → use count_rooms  
+- About prices → use get_room_prices
+
+Be precise and helpful."""),
+            ("user", query)
+        ]
+
+        # invocar al llm
+
+        response= llm_with_tools.invoke(messages)
+
+        # si el LLM necesita la tool para responder
+
+        if response.tool_calls:
+            results= []
+            for tool_call in response.tool_calls:
+                tool_name= tool_call["name"]
+                tool_args= tool_call["args"]
+            
+            if tool_name == "search_hotels_by_city":
+                    result = search_hotels_by_city.invoke(tool_args)
+            elif tool_name == "count_rooms":
+                result = count_rooms.invoke(tool_args)
+            elif tool_name == "get_room_prices":
+                result = get_room_prices.invoke(tool_args)
+            else:
+                result = f"Unknown tool: {tool_name}"
+                
+            results.append(result)
+            
+            # Devolver los resultados
+            return "\n\n".join(results)
+        else:
+            # Si no usa tools, devolver respuesta directa
+            return response.content
+    
+    except Exception as e:
+        logger.error(f"Error in agent: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"Sorry, error: {str(e)}"
+
+
+
+
+''' =================================== CADENA DEL RAG ==============================='''
+
+
 
 
 def create_rag_chain():

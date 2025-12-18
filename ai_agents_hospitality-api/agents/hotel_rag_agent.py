@@ -383,7 +383,7 @@ def create_hotel_agent():
     logger.info("Hotel agent with tools created successfully")
     return llm_with_tools
 
-async def invoke_agent_eith_tools(query: str)-> str:
+async def invoke_agent_with_tools(query: str)-> str:
     '''
     El invoke al agente con tools para responder
       
@@ -396,14 +396,23 @@ async def invoke_agent_eith_tools(query: str)-> str:
         llm_with_tools= create_hotel_agent()
         # sistema de mansajes
         messages = [
-            ("system", """You are a helpful hotel assistant with access to specialized tools.
+            ("system", """You are a helpful hotel assistant with access to specialized tools and a detailed knowledge base.
 
-When the user asks:
-- About hotels in a specific city → use search_hotels_by_city
-- "How many rooms" or counting → use count_rooms  
-- About prices → use get_room_prices
+IMPORTANT: Only use tools for these SPECIFIC tasks:
+- search_hotels_by_city: ONLY to list/search hotels by city name
+- count_rooms: ONLY to count number of rooms with filters
+- get_room_prices: ONLY to get basic room prices (PriceOffSeason, PricePeakSeason)
 
-Be precise and helpful."""),
+For ALL other questions, DON'T use any tool - I will provide you with relevant information from the knowledge base.
+
+Examples of what NOT to use tools for:
+- Hotel addresses, locations, descriptions
+- Meal charges, extra bed discounts, policies
+- Detailed room information, amenities
+- Comparing prices or any analysis
+- Any question about specific hotel details
+
+If the user asks something that is NOT one of the three simple operations above, respond without calling any tool."""),
             ("user", query)
         ]
 
@@ -433,8 +442,33 @@ Be precise and helpful."""),
             # Devolver los resultados
             return "\n\n".join(results)
         else:
-            # Si no usa tools, devolver respuesta directa
-            return response.content
+            # Si no usa tools, usar RAG para obtener contexto relevante
+            logger.info(f"No tool called, using RAG for query: {query}")
+            
+            # Obtener documentos relevantes del vector store
+            vectorstore = get_or_create_vectorstore()
+            retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+            relevant_docs = retriever.invoke(query)
+            
+            # Construir contexto con los documentos recuperados
+            context = "\n\n".join([doc.page_content for doc in relevant_docs])
+            
+            # Llamar al LLM con el contexto del RAG
+            agent_config = get_agent_config()
+            llm = ChatGoogleGenerativeAI(model=agent_config.model, temperature=0, google_api_key=agent_config.api_key)
+            rag_messages = [
+                ("system", """You are a helpful hotel assistant. Use the following context from the hotel knowledge base to answer the user's question.
+                
+If the information is in the context, provide a detailed answer.
+If the information is NOT in the context, say that you don't have that specific information available.
+
+Context from knowledge base:
+{context}""".format(context=context)),
+                ("user", query)
+            ]
+            
+            rag_response = llm.invoke(rag_messages)
+            return rag_response.content
     
     except Exception as e:
         logger.error(f"Error in agent: {e}")

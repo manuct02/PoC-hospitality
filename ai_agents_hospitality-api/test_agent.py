@@ -17,13 +17,7 @@ async def test_agent():
     print("="*70 + "\n")
     
     # Queries de prueba - solo preguntas naturales, sin pistas para el agente
-    test_queries = [
-        "What is the full address of Obsidian Tower?",
-        "What are the meal charges for Half Board in hotels in Paris?",
-        "List all hotels in France with their cities",
-        "What is the discount for extra bed in Grand Victoria?",
-        "Compare room prices between peak and off season for hotels in Nice",
-    ]
+    test_queries = ["list all hotels in France, just the names"]
     
     for i, query in enumerate(test_queries, 1):
         print(f"\n{'='*70}")

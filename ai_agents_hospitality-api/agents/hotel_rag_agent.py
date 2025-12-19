@@ -206,7 +206,7 @@ def search_hotels_by_city(city: str)->str:
         # Formatear la respuesta
         result= f"## Hotels in {city}\n\n"
         for hotel in city_hotels:
-            name= hotel.get('Name', 'Unknown')
+            name= hotel.get('Name', '')
             address= hotel.get('Address', {})
             result += f"**{name}**\n"
             result += f"- Address: {address.get('Address', 'N/A')}\n"
@@ -217,6 +217,54 @@ def search_hotels_by_city(city: str)->str:
         
     except Exception as e:
         return f"Error searching hotels: {str(e)}"
+
+
+@tool
+def list_all_hotels() -> str:
+    '''
+    Lista TODOS los hoteles disponibles en el sistema, agrupados por ciudad.
+    Usa esta herramienta cuando el usuario pregunte por "todos los hoteles", 
+    "hoteles en Francia", o quiera ver el catálogo completo.
+    
+    - input: ninguno
+    - output: información formateada de todos los hoteles organizados por ciudad
+    '''
+    
+    try:
+        data = load_hotels_data()
+        hotels = data.get('Hotels', [])
+        
+        if not hotels:
+            return "No hotels found in the system."
+        
+        # Agrupar hoteles por ciudad
+        hotels_by_city = {}
+        for hotel in hotels:
+            city = hotel.get('Address', {}).get('City', 'Unknown')
+            if city not in hotels_by_city:
+                hotels_by_city[city] = []
+            hotels_by_city[city].append(hotel)
+        
+        # Formatear resultado
+        result = f"## All Hotels in France\n\n"
+        result += f"**Total: {len(hotels)} hotels across {len(hotels_by_city)} cities**\n\n"
+        
+        for city in sorted(hotels_by_city.keys()):
+            city_hotels = hotels_by_city[city]
+            result += f"### {city} ({len(city_hotels)} hotels)\n\n"
+            
+            for hotel in city_hotels:
+                name = hotel.get('Name', 'Unknown')
+                address = hotel.get('Address', {})
+                result += f"- **{name}**\n"
+                result += f"  - Address: {address.get('Address', 'N/A')}\n"
+                result += f"  - Zip Code: {address.get('ZipCode', 'N/A')}\n"
+            result += "\n"
+        
+        return result
+        
+    except Exception as e:
+        return f"Error listing all hotels: {str(e)}"
 
 
 @tool
@@ -298,7 +346,7 @@ def get_room_prices(city: str = None, room_type: str = None, category: str = Non
             if city and hotel.get('Address', {}).get('City', '').lower() != city.lower():
                 continue
             
-            hotel_name = hotel.get('Name', 'Unknown')
+            hotel_name = hotel.get('Name', '')
             rooms = hotel.get('Rooms', [])
             
             for room in rooms:
@@ -374,7 +422,7 @@ def create_hotel_agent():
 
     # 2 Definir las tools
 
-    tools= [ search_hotels_by_city, count_rooms, get_room_prices]
+    tools= [ search_hotels_by_city, list_all_hotels, count_rooms, get_room_prices]
 
     # 3 El binding de las tools
 
@@ -398,21 +446,33 @@ async def invoke_agent_with_tools(query: str)-> str:
         messages = [
             ("system", """You are a helpful hotel assistant with access to specialized tools and a detailed knowledge base.
 
-IMPORTANT: Only use tools for these SPECIFIC tasks:
-- search_hotels_by_city: ONLY to list/search hotels by city name
-- count_rooms: ONLY to count number of rooms with filters
-- get_room_prices: ONLY to get basic room prices (PriceOffSeason, PricePeakSeason)
+Available Tools:
+- search_hotels_by_city(city: str): Returns hotels in ONE specific city
+- list_all_hotels(): Returns ALL 50 hotels in the system (across all cities in France)
+- count_rooms(city, hotel_name, room_type): Counts rooms matching filters  
+- get_room_prices(city, room_type, category): Returns room pricing information
 
-For ALL other questions, DON'T use any tool - I will provide you with relevant information from the knowledge base.
+CRITICAL RULES - FOLLOW THESE EXACTLY:
+1. When user asks about "all hotels", "hotels in France", "list hotels", "show hotels" → ALWAYS call list_all_hotels()
+2. When user asks about hotels in a SPECIFIC city (Paris, Nice, Cannes, whatever city you know) → call search_hotels_by_city(city)
+3. When user asks "how many rooms" and whatever following that → call count_rooms()
+4. When user asks about prices → call get_room_prices()
+5. Only skip tools for specific hotel details (amenities, policies, descriptions)
 
-Examples of what NOT to use tools for:
-- Hotel addresses, locations, descriptions
-- Meal charges, extra bed discounts, policies
-- Detailed room information, amenities
-- Comparing prices or any analysis
-- Any question about specific hotel details
+ALL hotels in the system are in France 
 
-If the user asks something that is NOT one of the three simple operations above, respond without calling any tool."""),
+Examples - MUST USE TOOLS:
+✅ "Hotels in Paris" → search_hotels_by_city(city="Paris")
+✅ "List all hotels" → list_all_hotels()
+✅ "Hotels in France" → list_all_hotels()
+✅ "Show me the hotels" → list_all_hotels()
+✅ "How many rooms in Nice?" → count_rooms(city="Nice")
+✅ "Room prices in Cannes" → get_room_prices(city="Cannes")
+
+Examples - NO TOOLS:
+❌ "Tell me about Grand Victoria" → use knowledge base
+❌ "What are meal charges?" → use knowledge base
+            """),
             ("user", query)
         ]
 
@@ -423,31 +483,55 @@ If the user asks something that is NOT one of the three simple operations above,
         # si el LLM necesita la tool para responder
 
         if response.tool_calls:
-            results= []
+            # Ejecutar las tools y recopilar resultados
+            tool_results= []
             for tool_call in response.tool_calls:
                 tool_name= tool_call["name"]
                 tool_args= tool_call["args"]
             
-            if tool_name == "search_hotels_by_city":
+                if tool_name == "search_hotels_by_city":
                     result = search_hotels_by_city.invoke(tool_args)
-            elif tool_name == "count_rooms":
-                result = count_rooms.invoke(tool_args)
-            elif tool_name == "get_room_prices":
-                result = get_room_prices.invoke(tool_args)
-            else:
-                result = f"Unknown tool: {tool_name}"
+                elif tool_name == "list_all_hotels":
+                    result = list_all_hotels.invoke(tool_args)
+                elif tool_name == "count_rooms":
+                    result = count_rooms.invoke(tool_args)
+                elif tool_name == "get_room_prices":
+                    result = get_room_prices.invoke(tool_args)
+                else:
+                    result = f"Unknown tool: {tool_name}"
                 
-            results.append(result)
+                tool_results.append(f"Tool: {tool_name}\nResult:\n{result}")
             
-            # Devolver los resultados
-            return "\n\n".join(results)
+            # Ahora el LLM toma los resultados de las tools y genera una respuesta natural
+            agent_config = get_agent_config()
+            llm = ChatGoogleGenerativeAI(model=agent_config.model, temperature=0, google_api_key=agent_config.api_key)
+            
+            formatting_messages = [
+                ("system", """You are a helpful hotel assistant. You have used specialized tools to get information.
+
+Now, take the tool results below and present them to the user in a natural, conversational, and well-formatted way.
+
+IMPORTANT:
+- Use natural language, as if speaking to a person
+- Format numbers and prices in a human-friendly way (e.g., "€450 per night" not just "450")
+- Use Markdown for clarity (headers, lists, tables) but write naturally
+- Be complete - include ALL information from the tool results
+- If there are multiple hotels/rooms, present ALL of them clearly
+- Use the tools whenever you thinl they may help but as a support in order to answer not as output
+Tool Results:
+{results}""".format(results="\n\n".join(tool_results))),
+                ("user", query)
+            ]
+            
+            final_response = llm.invoke(formatting_messages)
+            return final_response.content
         else:
             # Si no usa tools, usar RAG para obtener contexto relevante
             logger.info(f"No tool called, using RAG for query: {query}")
             
             # Obtener documentos relevantes del vector store
             vectorstore = get_or_create_vectorstore()
-            retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+            retriever = vectorstore.as_retriever(search_kwargs={"k": 20})
             relevant_docs = retriever.invoke(query)
             
             # Construir contexto con los documentos recuperados
@@ -457,10 +541,18 @@ If the user asks something that is NOT one of the three simple operations above,
             agent_config = get_agent_config()
             llm = ChatGoogleGenerativeAI(model=agent_config.model, temperature=0, google_api_key=agent_config.api_key)
             rag_messages = [
-                ("system", """You are a helpful hotel assistant. Use the following context from the hotel knowledge base to answer the user's question.
-                
-If the information is in the context, provide a detailed answer.
-If the information is NOT in the context, say that you don't have that specific information available.
+                ("system", """You are a professional hotel assistant with access to detailed hotel information.
+
+INSTRUCTIONS:
+1. Use the context below to answer the user's question COMPLETELY and in DETAIL
+2. Include ALL relevant information found in the context (addresses, prices, policies, amenities, etc.)
+3. Format your response in clear Markdown with headers, lists, and tables when appropriate
+4. If the question asks about multiple items, include ALL of them, not just a sample
+5. For numerical data (prices, counts), include exact numbers
+6. If specific information is NOT in the context, clearly state what's missing
+7. You must be able to calculate simple operations
+
+IMPORTANT: Provide COMPLETE answers, not summaries. Don't say "here are some examples" - give ALL the information.
 
 Context from knowledge base:
 {context}""".format(context=context)),

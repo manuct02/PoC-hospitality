@@ -111,10 +111,8 @@ def split_documents(documents: List)->List:
 
 def get_or_create_vectorstore(force_rebuild: bool= False):
     '''
-    Docstring for get_or_create_vectorstore
-    
-    :param force_rebuild: Description
-    :type force_rebuild: bool
+    Creamos un vectorstore donde almacena embeddings de los documentos
+    Si ya existe en disco lo carga desde ahí
     '''
 
     global _vectorstore

@@ -362,3 +362,50 @@ get_room_prices(city="Cannes", room_type="Double")
 
 **Total rooms found:** 45
 ``` 
+
+Me he dado cuenta aquí de que no le he metido contexto de memoria al agente.
+
+![alt text](image-8.png)
+
+Para darle una solución a esta issue modificamos la función `invoke_agent_with_tools(query:str)` en `hotel_rag_agent.py`.
+
+Añadimos un parámetro `conversation_history` donde se almacenan los nuevos mensajes con `.extend`. 
+
+- **Mensajes iniciales**
+```python
+messages = [("system", "...")]
+messages.extend(conversation_history)  # ← NUEVO
+messages.append(("user", query))        # ← NUEVO
+```
+
+- **Mensajes de reformateo de tools**
+```python
+formatting_messages = [("system", "...")]
+formatting_messages.extend(conversation_history)  # ← NUEVO
+formatting_messages.append(("user", query))       # ← NUEVO
+```
+
+- **Mensajes de RAG**
+```python 
+rag_messages = [("system", "...")]
+rag_messages.extend(conversation_history)  # ← NUEVO
+rag_messages.append(("user", query))        # ← NUEVO
+```
+
+Por otro lado, en el `main.py` hay que añadir una nueva variable que dependa de la sesión `conversation_history`.
+
+```python
+# NUEVO: Variable por sesión
+conversation_history = []
+
+# MODIFICADO: Pasar historial
+response_content = await invoke_agent_with_tools(user_query, conversation_history)
+
+# NUEVO: Guardar en historial
+conversation_history.append(("user", user_query))
+conversation_history.append(("assistant", response_content))
+```
+
+![alt text](image-7.png)
+
+# SQL

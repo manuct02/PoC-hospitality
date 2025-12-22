@@ -280,37 +280,37 @@ async def handle_hotel_query_simple(user_query: str) -> str:
 ### 📋 Plan
 
 #### Phase 1: Setup & Data Preparation
-- [ ] Install LangChain dependencies (`langchain`, `langchain-google-genai`)
-- [ ] Configure Google Gemini API key as environment variable (`AI_AGENTIC_API_KEY`)
-- [ ] Generate synthetic hotel data (3 hotels) using `gen_synthetic_hotels.py`
-- [ ] Verify hotel files are created in `bookings-db/output_files/hotels/`
+- [✅] Install LangChain dependencies (`langchain`, `langchain-google-genai`)
+- [✅] Configure Google Gemini API key as environment variable (`AI_AGENTIC_API_KEY`)
+- [✅] Generate synthetic hotel data (3 hotels) using `gen_synthetic_hotels.py`
+- [✅] Verify hotel files are created in `bookings-db/output_files/hotels/`
 
 #### Phase 2: Core Implementation
-- [ ] Create function to load hotel JSON file (`hotels.json`)
-- [ ] Create function to load hotel details markdown (`hotel_details.md`)
-- [ ] Implement `answer_hotel_question()` function with file context
-- [ ] Create ChatPromptTemplate with system prompt for hotel assistant
-- [ ] Build LangChain chain (prompt template + LLM)
+- [✅] Create function to load hotel JSON file (`hotels.json`)
+- [✅] Create function to load hotel details markdown (`hotel_details.md`)
+- [✅] Implement `answer_hotel_question()` function with file context
+- [✅] Create ChatPromptTemplate with system prompt for hotel assistant
+- [✅] Build LangChain chain (prompt template + LLM)
 
 #### Phase 3: Integration & Testing
-- [ ] Create `handle_hotel_query_simple()` async function for WebSocket API
-- [ ] Test with basic queries (hotel names, addresses, locations)
-- [ ] Test with meal plan queries
-- [ ] Test with room information queries
-- [ ] Verify error handling works correctly
+- [✅] Create `handle_hotel_query_simple()` async function for WebSocket API
+- [✅] Test with basic queries (hotel names, addresses, locations)
+- [✅] Test with meal plan queries
+- [✅] Test with room information queries
+- [✅] Verify error handling works correctly
 
 #### Phase 4: Documentation & Cleanup
-- [ ] Add code comments and docstrings
-- [ ] Test integration with WebSocket API endpoint
-- [ ] Verify responses are properly formatted
+- [✅] Add code comments and docstrings
+- [✅] Test integration with WebSocket API endpoint
+- [✅] Verify responses are properly formatted
 
 ### Deliverables
 
-- [ ] Function to load hotel files (3 hotels sample)
-- [ ] Simple agent chain with file context
-- [ ] Basic prompt template for hotel queries
-- [ ] Integration point for WebSocket API
-- [ ] Test with sample queries
+- [✅] Function to load hotel files (3 hotels sample)
+- [✅] Simple agent chain with file context
+- [✅] Basic prompt template for hotel queries
+- [✅] Integration point for WebSocket API
+- [✅] Test with sample queries
 
 ### Next Steps
 
@@ -405,45 +405,45 @@ Create an agent that:
 ### 📋 Plan
 
 #### Phase 1: Setup & Data Preparation
-- [ ] Install RAG dependencies (`langchain-community`, `chromadb`)
-- [ ] Generate full hotel dataset (50 hotels) using `gen_synthetic_hotels.py`
-- [ ] Verify all hotel files are created (JSON, markdown files)
+- [✅] Install RAG dependencies (`langchain-community`, `chromadb`)
+- [✅] Generate full hotel dataset (50 hotels) using `gen_synthetic_hotels.py`
+- [✅] Verify all hotel files are created (JSON, markdown files)
 
 #### Phase 2: Vector Store Creation
-- [ ] Implement document loader for `hotels.json` (JSONLoader)
-- [ ] Implement document loader for `hotel_details.md` (TextLoader)
-- [ ] Implement document loader for `hotel_rooms.md` (TextLoader)
-- [ ] Configure RecursiveCharacterTextSplitter (chunk_size=1000, overlap=200)
-- [ ] Create GoogleGenerativeAIEmbeddings instance
-- [ ] Build ChromaDB vector store from all documents
-- [ ] Persist vector store to disk for reuse
+- [✅] Implement document loader for `hotels.json` (JSONLoader)
+- [✅] Implement document loader for `hotel_details.md` (TextLoader)
+- [✅] Implement document loader for `hotel_rooms.md` (TextLoader)
+- [✅] Configure RecursiveCharacterTextSplitter (chunk_size=1000, overlap=200)
+- [✅] Create GoogleGenerativeAIEmbeddings instance
+- [✅] Build ChromaDB vector store from all documents
+- [✅] Persist vector store to disk for reuse
 
 #### Phase 3: RAG Chain Implementation
-- [ ] Create ChatGoogleGenerativeAI LLM instance (gemini-2.5-flash-lite, temperature=0)
-- [ ] Implement RetrievalQA chain with vector store
-- [ ] Design system prompt for hotel assistant context
-- [ ] Configure retrieval parameters (k=5 documents)
-- [ ] Test retrieval quality with sample queries
+- [✅] Create ChatGoogleGenerativeAI LLM instance (gemini-2.5-flash-lite, temperature=0)
+- [✅] Implement RetrievalQA chain with vector store
+- [✅] Design system prompt for hotel assistant context
+- [✅] Configure retrieval parameters (k=5 documents)
+- [✅] Test retrieval quality with sample queries
 
 #### Phase 4: Agent Implementation
-- [ ] Create hotel details agent function
-- [ ] Implement query preprocessing (normalization, validation)
-- [ ] Add response formatting (markdown structure)
-- [ ] Handle edge cases (no results, ambiguous queries)
+- [✅] Create hotel details agent function
+- [✅] Implement query preprocessing (normalization, validation)
+- [✅] Add response formatting (markdown structure)
+- [✅] Handle edge cases (no results, ambiguous queries)
 
 #### Phase 5: Integration & Testing
-- [ ] Integrate RAG agent with WebSocket API
-- [ ] Test with hotel location queries
-- [ ] Test with meal plan and pricing queries
-- [ ] Test with room comparison queries
-- [ ] Verify performance (response time < 10s)
-- [ ] Compare results with Exercise 0 (should be more accurate)
+- [✅] Integrate RAG agent with WebSocket API
+- [✅] Test with hotel location queries
+- [✅] Test with meal plan and pricing queries
+- [✅] Test with room comparison queries
+- [✅] Verify performance (response time < 10s)
+- [✅] Compare results with Exercise 0 (should be more accurate)
 
 #### Phase 6: Optimization
-- [ ] Tune chunk size and overlap if needed
-- [ ] Optimize retrieval k parameter
-- [ ] Add caching for frequent queries (optional)
-- [ ] Document vector store persistence strategy
+- [✅] Tune chunk size and overlap if needed
+- [✅] Optimize retrieval k parameter
+- [✅] Add caching for frequent queries (optional)
+- [✅] Document vector store persistence strategy
 
 ### Deliverables
 

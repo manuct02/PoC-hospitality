@@ -409,3 +409,112 @@ conversation_history.append(("assistant", response_content))
 ![alt text](image-7.png)
 
 # SQL
+
+Mientras que el RAG estaba pensado para descripciones, listas sobre hoteles, ahora se orquestra un agente de SQL que conteste datos numéricos, métricas o KPIs sobre las reservas.
+
+- **Qué hace este agente???**
+  - 1 **Genera SQL automáticamente**
+  - 2 **Ejecuta la query** contra PostgresQL
+  - 3 **Formatea el resultado** (tablas, números)
+  - 4 **Calcula métricas** complejas (ocupación)
+
+- Ejemplo:
+```SQL
+Usuario: "¿Cuántas reservas hay en el Ritz Paris en enero 2025?"
+
+Agente genera:
+SELECT COUNT(*) FROM bookings
+WHERE hotel_name = 'Ritz Paris'
+AND check_in_date >= '2025-01-01'
+AND check_in_date < '2025-02-01'
+
+Ejecuta → Resultado: 45
+
+Agente formatea:
+"Hay 45 reservas en el Ritz Paris durante enero 2025."
+```
+
+## 📊 Tabla `bookings` - Estructura Completa
+
+### Columnas de la Base de Datos
+
+| # | Nombre de Columna | Tipo de Dato | Descripción | Ejemplo |
+|---|-------------------|--------------|-------------|---------|
+| 1 | `hotel_name` | VARCHAR(255) | Nombre del hotel | "Obsidian Tower" |
+| 2 | `room_id` | VARCHAR(50) | Identificador de la habitación | "01-001" |
+| 3 | `room_type` | VARCHAR(50) | Tipo de habitación | "Double" |
+| 4 | `room_category` | VARCHAR(50) | Categoría de la habitación | "Standard" o "Premium" |
+| 5 | `check_in_date` | DATE | Fecha de entrada del huésped | 2025-01-12 |
+| 6 | `check_out_date` | DATE | Fecha de salida del huésped | 2025-01-14 |
+| 7 | `guest_first_name` | VARCHAR(100) | Nombre del huésped | "Matthew" |
+| 8 | `guest_last_name` | VARCHAR(100) | Apellido del huésped | "Shelton" |
+| 9 | `guest_email` | VARCHAR(255) | Email del huésped | "gramsey@example.com" |
+| 10 | `guest_phone` | VARCHAR(50) | Teléfono del huésped | "684065..." |
+| 11 | `guest_country` | VARCHAR(100) | País del huésped | "France" |
+| 12 | `guest_city` | VARCHAR(100) | Ciudad del huésped | "Cannes" |
+| 13 | `guest_address` | VARCHAR(255) | Dirección del huésped | "9901 Taylor Street" |
+| 14 | `guest_zip_code` | VARCHAR(20) | Código postal del huésped | "92061" |
+| 15 | `meal_plan` | VARCHAR(50) | Plan de comidas | "Full Board" |
+| 16 | `total_price` | DECIMAL(10,2) | Precio total de la reserva (EUR) | 1707.95 |
+
+---
+
+## Valores Posibles por Categoría
+
+### `room_type` (Tipo de Habitación)
+- **Single** - Habitación individual
+- **Double** - Habitación doble
+- **Triple** - Habitación triple
+
+### `room_category` (Categoría)
+- **Standard** - Categoría estándar
+- **Premium** - Categoría premium
+
+### `meal_plan` (Plan de Comidas)
+- **Room Only** - Solo habitación, sin comidas
+- **Breakfast** (B&B) - Desayuno incluido
+- **Half Board** - Media pensión (desayuno + cena)
+- **Full Board** - Pensión completa (desayuno + comida + cena)
+
+### `guest_country` (Países)
+Los huéspedes pueden ser de cualquier país, ejemplos:
+- France
+- Germany
+- USA
+- Spain
+- UK
+- etc.
+
+---
+
+## Campos Calculados (no están en la tabla, se calculan)
+
+| Campo | Cómo se calcula | Ejemplo |
+|-------|-----------------|---------|
+| **Total Nights** | `check_out_date - check_in_date` | 3 noches |
+| **Revenue per Night** | `total_price / total_nights` | €569.32/noche |
+
+---
+
+- Ejemplos de Querys en SQL
+  - Reservas de un hotel en específico
+  ```SQL
+  SELECT * FROM bookings WHERE hotel_name = 'Obsidian Tower';
+  ```
+  - Ingresos totales
+  ```SQL
+  SELECT SUM(total_price) FROM bookings;
+  ```
+  - Reservas por tipo de habitación
+  ```SQL
+  SELECT room_type, COUNT(*) 
+  FROM bookings 
+  GROUP BY room_type;
+  ```
+
+  - Reservas en enero de 2025
+  ```SQL
+  SELECT * FROM bookings 
+  WHERE check_in_date >= '2025-01-01' 
+  AND check_in_date < '2025-02-01';
+  ```

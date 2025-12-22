@@ -429,7 +429,7 @@ def create_hotel_agent():
     logger.info("Hotel agent with tools created successfully")
     return llm_with_tools
 
-async def invoke_agent_with_tools(query: str)-> str:
+async def invoke_agent_with_tools(query: str, conversation_history: list= None)-> str:
     '''
     El invoke al agente con tools para responder
       
@@ -437,10 +437,14 @@ async def invoke_agent_with_tools(query: str)-> str:
       - output: respuesta del agente
     '''
 
+    if conversation_history is None:
+        conversation_history= []
+
     try:
         # obtener el llm con tools
         llm_with_tools= create_hotel_agent()
-        # sistema de mansajes
+        
+        # sistema de mensajes con HISTORIAL
         messages = [
             ("system", """You are a helpful hotel assistant with access to specialized tools and a detailed knowledge base.
 
@@ -456,6 +460,7 @@ CRITICAL RULES - FOLLOW THESE EXACTLY:
 3. When user asks "how many rooms" and whatever following that → call count_rooms()
 4. When user asks about prices → call get_room_prices()
 5. Only skip tools for specific hotel details (amenities, policies, descriptions)
+6. REMEMBER previous conversation context - if user refers to "those hotels" or "each one", use the conversation history
 
 ALL hotels in the system are in France 
 
@@ -470,12 +475,16 @@ Examples - MUST USE TOOLS:
 Examples - NO TOOLS:
 ❌ "Tell me about Grand Victoria" → use knowledge base
 ❌ "What are meal charges?" → use knowledge base
-            """),
-            ("user", query)
+            """)
         ]
+        
+        # Añadir historial de conversación
+        messages.extend(conversation_history)
+        
+        # Añadir query actual
+        messages.append(("user", query))
 
         # invocar al llm
-
         response= llm_with_tools.invoke(messages)
 
         # si el LLM necesita la tool para responder
@@ -515,11 +524,18 @@ IMPORTANT:
 - Use Markdown for clarity (headers, lists, tables) but write naturally
 - Be complete - include ALL information from the tool results
 - If there are multiple hotels/rooms, present ALL of them clearly
-- Use the tools whenever you thinl they may help but as a support in order to answer not as output
+- Use the tools whenever you think they may help but as a support in order to answer not as output
+- REMEMBER previous conversation - if user refers to something mentioned before, use that context
+
 Tool Results:
-{results}""".format(results="\n\n".join(tool_results))),
-                ("user", query)
+{results}""".format(results="\n\n".join(tool_results)))
             ]
+            
+            # Añadir historial de conversación
+            formatting_messages.extend(conversation_history)
+            
+            # Añadir query actual
+            formatting_messages.append(("user", query))
             
             final_response = llm.invoke(formatting_messages)
             return final_response.content
@@ -538,6 +554,7 @@ Tool Results:
             # Llamar al LLM con el contexto del RAG
             agent_config = get_agent_config()
             llm = ChatGoogleGenerativeAI(model=agent_config.model, temperature=0, google_api_key=agent_config.api_key)
+            
             rag_messages = [
                 ("system", """You are a professional hotel assistant with access to detailed hotel information.
 
@@ -549,13 +566,19 @@ INSTRUCTIONS:
 5. For numerical data (prices, counts), include exact numbers
 6. If specific information is NOT in the context, clearly state what's missing
 7. You must be able to calculate simple operations
+8. REMEMBER previous conversation context - use conversation history to understand references
 
 IMPORTANT: Provide COMPLETE answers, not summaries. Don't say "here are some examples" - give ALL the information.
 
 Context from knowledge base:
-{context}""".format(context=context)),
-                ("user", query)
+{context}""".format(context=context))
             ]
+            
+            # Añadir historial de conversación
+            rag_messages.extend(conversation_history)
+            
+            # Añadir query actual
+            rag_messages.append(("user", query))
             
             rag_response = llm.invoke(rag_messages)
             return rag_response.content

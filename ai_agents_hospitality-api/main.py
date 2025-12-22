@@ -211,6 +211,9 @@ async def websocket_endpoint(websocket: WebSocket, uuid: str):
     """
     await websocket.accept()
     logger.info("WebSocket connection opened for %s", uuid)
+    
+    # Mantener historial de conversación por sesión
+    conversation_history = []
 
     try:
         while True:
@@ -226,12 +229,17 @@ async def websocket_endpoint(websocket: WebSocket, uuid: str):
                 except json.JSONDecodeError:
                     user_query = data
                 
-                # Get response from Exercise 0 agent or fallback to hardcoded
+                # Get response from Exercise 1 agent with conversation history
                 if EXERCISE_1_AVAILABLE:
                     try:
                         logger.info(f"Using Exercise 1 RAG agent for query: {user_query[:100]}...")
-                        response_content = await invoke_agent_with_tools(user_query)
+                        response_content = await invoke_agent_with_tools(user_query, conversation_history)
                         logger.info(f"✅ Exercise 1 RAG agent response generated successfully for {uuid}")
+                        
+                        # Guardar en historial
+                        conversation_history.append(("user", user_query))
+                        conversation_history.append(("assistant", response_content))
+                        
                     except Exception as e:
                         logger.error(f"❌ Error in Exercise 1 agent: {e}", exc_info=True)
                         logger.warning(f"Falling back to hardcoded response for {uuid}")

@@ -449,7 +449,40 @@ Genera una respuesta clara y concisa."""
             return final_response.content
         
         else:
-            return response.content
+            # El LLM no llamó a las herramientas, pero generó SQL como texto
+            logger.warning("⚠️ LLM no hizo tool_call, intentando extraer y ejecutar SQL...")
+            
+            content = response.content.strip()
+            
+            # Si el contenido parece SQL (empieza con SELECT), ejecutarlo
+            if content.upper().startswith('SELECT'):
+                logger.info("🔧 Detectado SQL sin tool_call, ejecutando manualmente...")
+                
+                try:
+                    # Ejecutar el SQL directamente
+                    result = execute_sql_query(content)
+                    
+                    # Reformular con LLM
+                    reformulation_prompt = f"""Pregunta: {query}
+
+Resultado de la base de datos (año 2025): {result}
+
+Responde en español de forma natural usando los datos exactos. Si es tabla markdown, muéstrala tal cual."""
+                    
+                    llm_basic = ChatGoogleGenerativeAI(
+                        model="gemini-2.0-flash-exp", 
+                        temperature=0, 
+                        google_api_key=agent_config.api_key
+                    )
+                    final_response = llm_basic.invoke([HumanMessage(content=reformulation_prompt)])
+                    return final_response.content
+                    
+                except Exception as e:
+                    logger.error(f"Error ejecutando SQL extraído: {e}")
+                    return f"Error ejecutando consulta: {str(e)}"
+            else:
+                # No es SQL, devolver el contenido tal cual
+                return content
     
     except Exception as e:
         logger.error(f"Error en SQL agent: {str(e)}")

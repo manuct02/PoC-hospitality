@@ -664,3 +664,8 @@ if EXERCISE_AVAILABLE:
 
 ## TEST
 
+![alt text](image-17.png)
+
+![alt text](image-18.png)
+
+El agente de SQL parece cumplir satisfactoriamente todas las queries de prueba.

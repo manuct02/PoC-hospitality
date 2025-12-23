@@ -328,14 +328,12 @@ def invoke_sql_agent(query: str, conversation_history: Optional[list]= None)-> s
         logger.info(f"Procesando consulta SQL: {query}")
         llm_with_tools, tools= create_sql_agent()
 
-        # Construir mensajes
-        current_date = datetime.now().strftime("%Y-%m-%d")
+        
         system_prompt= f"""Eres un experto analista de datos de reservas hoteleras.
 
 CONTEXTO TEMPORAL:
-- Fecha actual: {current_date}
 - Año actual: 2025
-- Si el usuario NO especifica año, asume 2025
+- Si el usuario NO especifica año, asume que es el año 2025
 - Si dice "en abril" sin año, asume "abril de 2025"
 
 BASE DE DATOS: PostgreSQL
@@ -424,6 +422,8 @@ IMPORTANTE:
 - NO conviertas las tablas en texto narrativo
 - Solo añade una breve introducción antes de la tabla si es necesario
 - Para respuestas simples (números, textos cortos), responde de forma natural en español
+- Si no se especifica el año en la pregunta, asume siempre 2025.
+- No es necesario por parte del usuario especificar año, debes contestar siempre asumiendo 2025 sin pedir permiso
 
 Genera una respuesta clara y concisa."""
             
@@ -462,7 +462,7 @@ if __name__== "__main__":
     if test_connection():
         print("✅ Conexión a PostgreSQL OK\n")
 
-        test_queries = [ "qué plan de comidas ha generado menos dinero en enero? el del Obsidian Tower o el de Diamond Falls?"
+        test_queries = [ "dime la ocupación del Obsidian Tower en enero, sólo quiero que me contestes el porcentaje, nada más"
         ]
         
         for q in test_queries:

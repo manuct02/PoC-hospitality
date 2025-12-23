@@ -590,26 +590,26 @@ RevPAR = Total Revenue / Total Available Room-Nights
 - [✅] Test agent with simple queries (booking counts)
 
 #### Phase 4: Analytics Calculations
-- [ ] Implement bookings count query logic
-- [ ] Implement occupancy rate calculation (two-step: query + formula)
-- [ ] Implement total revenue aggregation
-- [ ] Implement RevPAR calculation (revenue / available room-nights)
-- [ ] Handle edge cases (no bookings, division by zero)
+- [✅] Implement bookings count query logic
+- [✅] Implement occupancy rate calculation (two-step: query + formula)
+- [✅] Implement total revenue aggregation
+- [✅] Implement RevPAR calculation (revenue / available room-nights)
+- [✅] Handle edge cases (no bookings, division by zero)
 
 #### Phase 5: Two-Step Query Process
-- [ ] Implement Step 1: Generate SQL from natural language
-- [ ] Implement Step 2: Execute query and format results
-- [ ] Add query validation before execution
-- [ ] Implement result formatting (tables, markdown)
-- [ ] Add error handling for SQL syntax errors
+- [✅] Implement Step 1: Generate SQL from natural language
+- [✅] Implement Step 2: Execute query and format results
+- [✅] Add query validation before execution
+- [✅] Implement result formatting (tables, markdown)
+- [✅] Add error handling for SQL syntax errors
 
 #### Phase 6: Advanced Queries & Testing
-- [ ] Test with date range queries (months, quarters, years)
-- [ ] Test with hotel-specific filters
-- [ ] Test with guest country/city filters
-- [ ] Test with meal plan comparisons
-- [ ] Verify occupancy and RevPAR calculations are accurate
-- [ ] Test with edge cases (empty results, invalid dates)
+- [✅] Test with date range queries (months, quarters, years)
+- [✅] Test with hotel-specific filters
+- [✅] Test with guest country/city filters
+- [✅] Test with meal plan comparisons
+- [✅] Verify occupancy and RevPAR calculations are accurate
+- [✅] Test with edge cases (empty results, invalid dates)
 
 #### Phase 7: Integration & Error Handling
 - [ ] Integrate SQL agent with WebSocket API

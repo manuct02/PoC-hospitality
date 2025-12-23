@@ -614,6 +614,22 @@ def test_connection():
             return True
 ```
 
+### Comprobación de querys
+
+#### Ocupación
+El Obsidian Tower tiene:
+- **47 habitaciones**![alt text](image-12.png)
+- En enero se ocuparon **834 habitaciones a lo largo del mes**
+![alt text](image-11.png)
+
+![alt text](image-13.png)
+
+Si probamos la query al agente
+
+![alt text](image-15.png)
+
+![alt text](image-14.png)
+
 
 
 

@@ -36,27 +36,33 @@ def classify_query(query: str)-> str:
 
     system_prompt= """Eres un clasificador de consultas para un sistema hotelero.
 
-Tu trabajo es determinar si la pregunta es sobre:
+COLUMNAS EN BASE DE DATOS SQL (tabla bookings):
+id, hotel_name, room_id, room_type, room_category, check_in_date, check_out_date,
+guest_first_name, guest_last_name, guest_email, guest_phone, guest_country,
+guest_city, guest_address, guest_zip_code, meal_plan, total_price, total_nights
 
-A) INFORMACIÓN DE HOTELES Y HABITACIONES (usa 'rag'):
-- Información sobre hoteles (ubicación, dirección, políticas, descuentos)
-- Tipos de habitaciones (Single, Double, Triple)
-- Categorías (Standard, Premium)
-- Precios de habitaciones (por temporada, por tipo)
-- Planes de comidas ofrecidos
-- Comparación de precios entre hoteles
-- Cualquier pregunta sobre características de hoteles
-- Cualquier consulta sobre recomendaciones por zona, precio, plan de ruta, qué hacer por la zona del hotel
+REGLA CRÍTICA: Si la pregunta menciona CUALQUIERA de estas columnas o conceptos → usa 'sql':
+- Personas/huéspedes/clientes/nombres (guest_first_name, guest_last_name)
+- Email/correo (guest_email)
+- Teléfono/phone (guest_phone)
+- País/ciudad/dirección/código postal (guest_country, guest_city, guest_address, guest_zip_code)
+- Reservas/bookings
+- Fechas de check-in/check-out
+- Planes de comida RESERVADOS (meal_plan en bookings)
+- Precio total/ingresos (total_price)
+- Noches (total_nights)
+- Ocupación/estadísticas/analytics
 
-B) RESERVAS Y ANALYTICS (usa 'sql'):
-- Número de reservas (bookings)
-- Ocupación de hoteles
-- Ingresos (revenue)
-- RevPAR
-- Estadísticas de huéspedes
-- Tendencias de reservas por fecha
-- Comparación de meal plans en reservas
-- Análisis de datos de bookings
+A) INFORMACIÓN DE HOTELES (usa 'rag' SOLO si pregunta por):
+- Características de hoteles (ubicación, políticas, descuentos)
+- Tipos de habitaciones DISPONIBLES (no reservadas)
+- Precios de CATÁLOGO (no de reservas concretas)
+- Planes de comida OFRECIDOS (no los que se reservaron)
+- Recomendaciones por zona
+
+B) RESERVAS Y DATOS (usa 'sql' para TODO lo demás)
+
+Si hay CUALQUIER duda → usa 'sql'
 
 Responde ÚNICAMENTE con 'rag' o 'sql' sin explicaciones."""
     messages= [ SystemMessage(content=system_prompt), HumanMessage(content=f"Pregunta: {query}")]

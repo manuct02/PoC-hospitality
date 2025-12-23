@@ -589,6 +589,8 @@ Usamo el `with` para cerrar aitomáticamente esta conexión al terminar.
 
 - Tenemos dos tools (`query_bookings_database` y `get_bookings_schema`) que ejecutan la consulta SQL en la base de datos de bookings y obtiene el esquema completo de la tabla de bookings respectivamente.
 
+## Paso 2: Implementación Agente SQL
+
 - Se crea el agente con la función `create_sql_agent()`. El agente usa:
   - LLM:
     - modelo: "gemini-2.0-flash-exp"
@@ -629,6 +631,16 @@ Si probamos la query al agente
 ![alt text](image-15.png)
 
 ![alt text](image-14.png)
+
+## Paso 3: Agente Orquestrador
+
+Una vez tenemos el agente SQL procedemos con el orquestrador para luego integrar todo vía WebSocket.
+
+Creamos un **orquestrador** que decida automáticamente que agente usar:
+
+#### Orquestrador:
+- Preguntas sobre **hoteles/ubicaciones/habitaciones/precios** $\longrightarrow$ **RAG Agent**
+- Preguntas sobre **bookings/ocupación/ingresos** $\longrightarrow$ **SQL Agent**
 
 
 

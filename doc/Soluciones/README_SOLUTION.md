@@ -602,5 +602,18 @@ Usamo el `with` para cerrar aitomáticamente esta conexión al terminar.
 
 - El procesador de las consultas `invoke_sql_agent` con historial de conversación integrado. Es aquí donde implementamos el prompt del agente y una lista a modo de contexto conversacional.
 
-- Por último definimos una `test_connection()` que pruebe la conexión a PostgreSQL
+- Por último definimos una `test_connection()` que pruebe la conexión a PostgreSQL.
+```python
+def test_connection():
+  try:
+        engine = get_database_engine()
+        with engine.connect() as conn:
+            result= conn.execute(text("SELECT COUNT(*) FROM bookings"))
+            count= result.fetchone()[0]
+            logger.info(f"Conexión OK. Total bookings: {count}")
+            return True
+```
+
+
+
 

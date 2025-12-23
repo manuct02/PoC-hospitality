@@ -23,19 +23,19 @@ from util.logger_config import logger
 from util.configuration import settings, PROJECT_ROOT
 
 
-# Import Exercise 1 agent (RAG with tools)
-EXERCISE_1_AVAILABLE = False
+# Import Orchestrator (integrates RAG and SQL agents)
+EXERCISE_AVAILABLE = False
 try:
-    from agents.hotel_rag_agent import invoke_agent_with_tools
-    EXERCISE_1_AVAILABLE = True
-    logger.info("✅ Exercise 1 RAG agent loaded successfully")
+    from agents.orchestrator import orchestrate_query
+    EXERCISE_AVAILABLE = True
+    logger.info("✅ Orchestrator loaded successfully (RAG + SQL agents)")
 except ImportError as e:
-    logger.warning(f"Exercise 1 agent not available (ImportError): {e}")
+    logger.warning(f"Orchestrator not available (ImportError): {e}")
     logger.warning("Using hardcoded responses. Install dependencies if needed.")
-    EXERCISE_1_AVAILABLE = False
+    EXERCISE_AVAILABLE = False
 except Exception as e:
-    logger.warning(f"Error loading Exercise 1 agent: {e}. Using hardcoded responses.")
-    EXERCISE_1_AVAILABLE = False
+    logger.warning(f"Error loading Orchestrator: {e}. Using hardcoded responses.")
+    EXERCISE_AVAILABLE = False
 
 
 # Hardcoded responses for demo queries
@@ -202,7 +202,7 @@ async def websocket_endpoint(websocket: WebSocket, uuid: str):
     This endpoint establishes a WebSocket connection and handles
     bidirectional communication between the client and the server.
     
-    Uses Exercise 0 agent (LangChain with file context) if available,
+    Uses Orchestrator (RAG + SQL agents) if available,
     otherwise falls back to hardcoded responses.
 
     Args:
@@ -229,24 +229,24 @@ async def websocket_endpoint(websocket: WebSocket, uuid: str):
                 except json.JSONDecodeError:
                     user_query = data
                 
-                # Get response from Exercise 1 agent with conversation history
-                if EXERCISE_1_AVAILABLE:
+                # Get response from Orchestrator (routes to RAG or SQL agent)
+                if EXERCISE_AVAILABLE:
                     try:
-                        logger.info(f"Using Exercise 1 RAG agent for query: {user_query[:100]}...")
-                        response_content = await invoke_agent_with_tools(user_query, conversation_history)
-                        logger.info(f"✅ Exercise 1 RAG agent response generated successfully for {uuid}")
+                        logger.info(f"Using Orchestrator for query: {user_query[:100]}...")
+                        response_content = await orchestrate_query(user_query, conversation_history)
+                        logger.info(f"✅ Orchestrator response generated successfully for {uuid}")
                         
                         # Guardar en historial
                         conversation_history.append(("user", user_query))
                         conversation_history.append(("assistant", response_content))
                         
                     except Exception as e:
-                        logger.error(f"❌ Error in Exercise 1 agent: {e}", exc_info=True)
+                        logger.error(f"❌ Error in Orchestrator: {e}", exc_info=True)
                         logger.warning(f"Falling back to hardcoded response for {uuid}")
                         response_content = find_matching_response(user_query)
                 else:
                     # Fallback to hardcoded responses
-                    logger.debug(f"Using hardcoded responses (Exercise 1 not available) for {uuid}")
+                    logger.debug(f"Using hardcoded responses (Orchestrator not available) for {uuid}")
                     response_content = find_matching_response(user_query)
                 
                 # Send response back to client

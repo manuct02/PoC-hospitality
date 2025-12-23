@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import os
 from typing import Optional
 import time
+from datetime import datetime
 
 from sqlalchemy import create_engine, text
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -163,7 +164,20 @@ def invoke_sql_agent(query: str, conversation_history: Optional[list]= None)-> s
         llm_with_tools, tools= create_sql_agent()
 
         # Construir mensajes
-        system_prompt= """Eres un experto analista de datos de reservas hoteleras.
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        system_prompt= f"""Eres un experto analista de datos de reservas hoteleras.
+
+CONTEXTO TEMPORAL:
+- Fecha actual: {current_date}
+- Año actual: 2025
+- Si el usuario NO especifica año, asume 2025
+- Si dice "en abril" sin año, asume "abril de 2025"
+
+BASE DE DATOS: PostgreSQL
+- Usa sintaxis de PostgreSQL (NO SQLite)
+- Para filtrar por fechas usa: check_in_date >= '2025-01-01' AND check_in_date < '2025-02-01'
+- NUNCA uses STRFTIME (es de SQLite, NO funciona en PostgreSQL)
+- Funciones PostgreSQL: TO_CHAR, EXTRACT, DATE_TRUNC
 
 IMPORTANTE - Columnas disponibles en la tabla 'bookings':
 - hotel_name (NO hotel_id - usa DISTINCT hotel_name para contar hoteles)
@@ -222,6 +236,11 @@ REGLAS CRÍTICAS:
 
                 # Ejecutar la herramienta
                 tool_func= next(t for t in tools if t.name==tool_name)
+                
+                # DEBUG: Mostrar el SQL generado
+                if tool_name == "query_bookings_database":
+                    print(f"\n🔍 SQL generado: {tool_args.get('sql_query', 'N/A')}\n")
+                
                 result= tool_func.invoke(tool_args)
                 tool_results.append(f"Resultado de {tool_name}: {result}")
             
@@ -269,10 +288,7 @@ if __name__== "__main__":
     if test_connection():
         print("✅ Conexión a PostgreSQL OK\n")
 
-        test_queries = ["¿Cuántas reservas hay?",
-                        "¿Cuál es el hotel con más reservas?",
-                        "¿Cuántas reservas hay en enero de 2025?",
-                        "¿Cuál es el revenue total por hotel?"]
+        test_queries = ["¿Cuánto facturó el hotel 'Obsidian Tower' en enero?"]
         
         for q in test_queries:
             print(f"📊 {q}")

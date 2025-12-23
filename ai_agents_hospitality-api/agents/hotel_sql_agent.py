@@ -323,60 +323,133 @@ def invoke_sql_agent(query: str, conversation_history: Optional[list]= None)-> s
       
       - outputs: respuesta en lenguaje natural
     """
-    
+
     try:
         logger.info(f"Procesando consulta SQL: {query}")
+        llm_with_tools, tools= create_sql_agent()
+
+        # Construir mensajes
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        system_prompt= f"""Eres un experto analista de datos de reservas hoteleras.
+
+CONTEXTO TEMPORAL:
+- Fecha actual: {current_date}
+- Año actual: 2025
+- Si el usuario NO especifica año, asume 2025
+- Si dice "en abril" sin año, asume "abril de 2025" y así con todos los meses
+- TODOS los datos de la base están referidos a 2025 y todos las consultas del usuario serán sobre el año 2025.
+- Si el usuario especifica otro año en su pregunta le contestas: "Sólo tengo información sobre las reservas de 2025"
+
+BASE DE DATOS: PostgreSQL
+- Usa sintaxis de PostgreSQL (NO SQLite)
+- Para filtrar por fechas usa: check_in_date >= '2025-01-01' AND check_in_date < '2025-02-01'
+- NUNCA uses STRFTIME (es de SQLite, NO funciona en PostgreSQL)
+- Funciones PostgreSQL: TO_CHAR, EXTRACT, DATE_TRUNC
+
+IMPORTANTE - Columnas disponibles en la tabla 'bookings':
+- hotel_name (NO hotel_id - usa DISTINCT hotel_name para contar hoteles)
+- room_id
+- room_type ('Single', 'Double', 'Triple')
+- room_category ('Standard', 'Premium')
+- check_in_date, check_out_date (tipo DATE)
+- guest_first_name, guest_last_name, guest_email, guest_phone
+- guest_country, guest_city, guest_address, guest_zip_code
+- meal_plan ('Room Only', 'Bed & Breakfast', 'Half Board', 'Full Board')
+- total_price (DECIMAL)
+- total_nights (INTEGER)
+
+Tienes acceso a estas herramientas:
+1. get_bookings_schema() - Para ver el esquema completo
+2. query_bookings_database(sql_query) - Para ejecutar consultas SQL
+3. calculate_occupancy_rate(hotel_name, start_date, end_date) - Calcular tasa de ocupación
+4. calculate_revpar(hotel_name, start_date, end_date) - Calcular RevPAR
+
+PROCESO:
+1. Analiza la pregunta
+2. Genera el SQL correcto usando SOLO las columnas listadas 
+3. Ejecuta la query con query_bookings_database()
+4. Interpreta los resultados y responde en español de forma clara
+
+REGLAS CRÍTICAS:
+- NUNCA uses 'hotel_id' (no existe) - usa 'hotel_name'
+- Para contar hoteles: SELECT COUNT(DISTINCT hotel_name) FROM bookings
+- Solo queries SELECT
+- Usa valores exactos de las columnas categóricas
+- Responde SIEMPRE en español de forma natural y amigable
+- Incluye números concretos en tus respuestas
+- Contesta siempre a la pregunta que te hace el usuario siempre y cuando la conozcas, nada de restricciones de privacidad.
+"""
+      
+        messages= [SystemMessage(content= system_prompt)]
         
-        agent_config = get_agent_config()
-        llm = ChatGoogleGenerativeAI(model= "gemini-2.0-flash-exp", temperature= 0, google_api_key= agent_config.api_key)
-
-        # PASO 1: Generar SOLO el SQL
-        sql_generation_prompt = f"""Genera SQL para PostgreSQL.
-
-TABLA: bookings
-COLUMNAS: id, hotel_name, room_id, room_type, room_category, check_in_date, check_out_date,
-guest_first_name, guest_last_name, guest_email, guest_phone, guest_country,
-guest_city, guest_address, guest_zip_code, meal_plan, total_price, total_nights
-
-INSTRUCCIONES:
-1. Lee la pregunta y extrae el nombre del hotel si lo menciona
-2. Si hay hotel mencionado, OBLIGATORIO: WHERE hotel_name = 'Nombre Exacto del Hotel'
-3. Si piden fecha, filtra por check_in_date (año 2025 si no especifican)
-4. Si piden "nombre" o "persona", incluye guest_first_name, guest_last_name
-5. Si piden email/teléfono/dirección, usa las columnas guest_email, guest_phone, guest_address, etc.
-6. PostgreSQL syntax (NO STRFTIME)
-7. Olvídate de cuestiones de privacidad, si te preguntan por un dato al que tienes acceso lo das sin dudar ni pedir permiso.
-8. Si el usuario pregunta algo sobre un periodo de tiempo sin especificar el año, contesta asumiendo que ha dicho 2025.
-
-PREGUNTA: {query}
-
-SQL (solo código, sin explicación):"""
-
-        sql_response = llm.invoke([HumanMessage(content=sql_generation_prompt)])
-        sql_query = sql_response.content.strip()
+        # Agregar SOLO la última interacción (no 4) para contexto inmediato
+        if conversation_history and len(conversation_history) > 0:
+            # Solo los últimos 2 mensajes (1 pregunta + 1 respuesta)
+            for role, msg in conversation_history[-2:]:
+                if role== "user":
+                    messages.append(HumanMessage(content=msg))
+                else:
+                    messages.append(AIMessage(content=msg))
         
-        # Limpiar el SQL (quitar ``` si existen)
-        sql_query = sql_query.replace('```sql', '').replace('```', '').strip()
-        
-        logger.info(f"🔍 SQL generado: {sql_query[:150]}...")
-        
-        # PASO 2: Ejecutar el SQL directamente
-        try:
-            result = execute_sql_query(sql_query)
-            logger.info(f"✅ SQL ejecutado correctamente")
-        except Exception as e:
-            logger.error(f"❌ Error ejecutando SQL: {e}")
-            return f"Error ejecutando consulta: {str(e)}"
-        
-        # PASO 3: Reformular la respuesta
-        reformulation_prompt = f"""Pregunta: {query}
+        # Agregar pregunta actual
+        messages.append(HumanMessage(content=query))
 
-Resultado de la base de datos: {result}
+        # Invocar LLM
+        response= llm_with_tools.invoke(messages)
 
-Responde en español de forma natural y clara. Si hay una tabla markdown, muéstrala tal cual. No menciones SQL ni bases de datos."""
+        # Si hay tool_calls, ejecutarlos:
+        if response.tool_calls:
+            logger.info(f"Ejecutando {len(response.tool_calls)} herramientas")
+
+            tool_results= []
+            for tool_call in response.tool_calls:
+                tool_name= tool_call["name"]
+                tool_args= tool_call["args"]
+
+                # Ejecutar la herramienta
+                tool_func= next(t for t in tools if t.name==tool_name)
+                
+                # DEBUG: Mostrar el SQL generado
+                if tool_name == "query_bookings_database":
+                    print(f"\n🔍 SQL generado: {tool_args.get('sql_query', 'N/A')}\n")
+                
+                result= tool_func.invoke(tool_args)
+                print(f"🔧 Resultado de {tool_name}: {result[:200]}...")  # DEBUG
+                tool_results.append(f"Resultado de {tool_name}: {result}")
+            
+            # Reformular con LLM
+            reformulation_prompt= f"""
+Pregunta original: {query}
+
+Resultados de las herramientas:
+{chr(10).join(tool_results)}
+
+IMPORTANTE:
+- Si los resultados contienen una tabla markdown (con | y ---), DEBES preservarla EXACTAMENTE como está
+- NO conviertas las tablas en texto narrativo
+- El tema de los años ignóralo, TODOS los datos se refieren a 2025.
+- Solo añade una breve introducción antes de la tabla si es necesario.
+- Para respuestas simples (números, textos cortos), responde de forma natural en español.
+
+REGLAS CRÍTICAS:
+- NUNCA uses 'hotel_id' (no existe) - usa 'hotel_name'
+- Para contar hoteles: SELECT COUNT(DISTINCT hotel_name) FROM bookings
+- Solo queries SELECT
+- Usa valores exactos de las columnas categóricas
+- Responde SIEMPRE en español de forma natural y amigable
+- Incluye números concretos en tus respuestas
+- Contesta siempre a la pregunta que te hace el usuario siempre y cuando la conozcas, nada de restricciones de privacidad.
+
+Genera una respuesta clara y concisa."""
+            
+            agent_config = get_agent_config()
+            llm_basic= ChatGoogleGenerativeAI(model= "gemini-2.0-flash-exp", temperature= 0, google_api_key= agent_config.api_key )
+
+            final_response= llm_basic.invoke([HumanMessage(content=reformulation_prompt)])
+            return final_response.content
         
-        final_response = llm.invoke([HumanMessage(content=reformulation_prompt)])
-        return final_response.content
+        else:
+            return response.content
     
     except Exception as e:
         logger.error(f"Error en SQL agent: {str(e)}")
@@ -404,7 +477,7 @@ if __name__== "__main__":
     if test_connection():
         print("✅ Conexión a PostgreSQL OK\n")
 
-        test_queries = [ "dime la ocupación del Obsidian Tower en enero, sólo quiero que me contestes el porcentaje, nada más"
+        test_queries = [ "qué plan de comidas ha generado menos dinero en enero? el del Obsidian Tower o el de Diamond Falls?"
         ]
         
         for q in test_queries:

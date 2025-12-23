@@ -55,7 +55,7 @@ def execute_sql_query(query: str) -> str:
     Ejecuta una query SQL y devuelve los resultados formateados
 
       - input: query SQL a ejecutar
-      - output: resultados formateados como texto
+      - output: resultados formateados como texto o tabla markdown
     """
 
     try:
@@ -68,14 +68,41 @@ def execute_sql_query(query: str) -> str:
                 return "No se encontraron resultados"
             
             # Formatear resultados
-
             if len(rows)==1 and len(rows[0])==1:
-                # Un slo valor
+                # Un solo valor (COUNT, SUM, etc.)
                 return str(rows[0][0])
             
+            elif len(rows) <= 3:
+                # Pocas filas: formato simple (no tabla)
+                return "\n".join([str(dict(row._mapping)) for row in rows])
+            
             else: 
-                # Múltiples filas/columnas
-                return "\n".join([str(dict(row._mapping)) for row in rows[:50]])
+                # Múltiples filas: tabla markdown
+                if not rows:
+                    return "No hay datos"
+                
+                # Obtener nombres de columnas
+                columns = list(rows[0]._mapping.keys())
+                
+                # Crear encabezado de tabla markdown
+                header = "| " + " | ".join(columns) + " |"
+                separator = "|" + "|".join(["---" for _ in columns]) + "|"
+                
+                # Crear filas de datos (limitar a 50)
+                data_rows = []
+                for row in rows[:50]:
+                    row_dict = dict(row._mapping)
+                    row_values = [str(row_dict[col]) for col in columns]
+                    data_rows.append("| " + " | ".join(row_values) + " |")
+                
+                # Unir todo
+                table = "\n".join([header, separator] + data_rows)
+                
+                # Añadir nota si hay más filas
+                if len(rows) > 50:
+                    table += f"\n\n*Mostrando 50 de {len(rows)} resultados*"
+                
+                return table
     
     except Exception as e:
         logger.error(f"Error ejecutando SQL: {str(e)}")
@@ -134,6 +161,144 @@ Ejemplos de queries:
 - SELECT city, SUM(total_price) FROM bookings GROUP BY city
 """
 
+@tool
+def calculate_occupancy_rate(hotel_name: str, start_date: str, end_date: str) -> str:
+    """
+    Calcula la tasa de ocupación de un hotel en un período.
+    
+    Args:
+        hotel_name: Nombre del hotel
+        start_date: Fecha inicio (formato YYYY-MM-DD)
+        end_date: Fecha fin (formato YYYY-MM-DD)
+        
+    Returns:
+        str: Tasa de ocupación en porcentaje
+    """
+    try:
+        engine = get_database_engine()
+        with engine.connect() as conn:
+            # 1. Contar habitaciones del hotel
+            room_count_query = text("""
+                SELECT COUNT(DISTINCT room_id) as total_rooms
+                FROM bookings
+                WHERE hotel_name = :hotel_name
+            """)
+            room_result = conn.execute(room_count_query, {"hotel_name": hotel_name})
+            total_rooms = room_result.fetchone()[0]
+            
+            if not total_rooms:
+                return f"No se encontraron habitaciones para el hotel '{hotel_name}'"
+            
+            # 2. Calcular noches ocupadas en el período
+            occupied_query = text("""
+                SELECT COALESCE(SUM(total_nights), 0) as occupied_nights
+                FROM bookings
+                WHERE hotel_name = :hotel_name
+                AND check_in_date >= :start_date
+                AND check_in_date < :end_date
+            """)
+            occupied_result = conn.execute(occupied_query, {
+                "hotel_name": hotel_name,
+                "start_date": start_date,
+                "end_date": end_date
+            })
+            occupied_nights = occupied_result.fetchone()[0]
+            
+            # 3. Calcular días en el período
+            from datetime import datetime
+            start = datetime.strptime(start_date, '%Y-%m-%d')
+            end = datetime.strptime(end_date, '%Y-%m-%d')
+            days_in_period = (end - start).days
+            
+            # 4. Calcular noches disponibles
+            available_nights = total_rooms * days_in_period
+            
+            # 5. Calcular tasa de ocupación
+            if available_nights == 0:
+                return "No hay noches disponibles en ese período"
+            
+            occupancy_rate = (occupied_nights / available_nights) * 100
+            
+            return f"""Tasa de Ocupación para {hotel_name}:
+- Período: {start_date} a {end_date} ({days_in_period} días)
+- Habitaciones del hotel: {total_rooms}
+- Noches disponibles: {available_nights}
+- Noches ocupadas: {occupied_nights}
+- Tasa de ocupación: {occupancy_rate:.2f}%"""
+            
+    except Exception as e:
+        logger.error(f"Error calculando ocupación: {str(e)}")
+        return f"Error: {str(e)}"
+
+@tool
+def calculate_revpar(hotel_name: str, start_date: str, end_date: str) -> str:
+    """
+    Calcula el RevPAR (Revenue Per Available Room) de un hotel.
+    
+    Args:
+        hotel_name: Nombre del hotel
+        start_date: Fecha inicio (formato YYYY-MM-DD)
+        end_date: Fecha fin (formato YYYY-MM-DD)
+        
+    Returns:
+        str: RevPAR calculado
+    """
+    try:
+        engine = get_database_engine()
+        with engine.connect() as conn:
+            # 1. Contar habitaciones del hotel
+            room_count_query = text("""
+                SELECT COUNT(DISTINCT room_id) as total_rooms
+                FROM bookings
+                WHERE hotel_name = :hotel_name
+            """)
+            room_result = conn.execute(room_count_query, {"hotel_name": hotel_name})
+            total_rooms = room_result.fetchone()[0]
+            
+            if not total_rooms:
+                return f"No se encontraron habitaciones para el hotel '{hotel_name}'"
+            
+            # 2. Calcular revenue total en el período
+            revenue_query = text("""
+                SELECT COALESCE(SUM(total_price), 0) as total_revenue
+                FROM bookings
+                WHERE hotel_name = :hotel_name
+                AND check_in_date >= :start_date
+                AND check_in_date < :end_date
+            """)
+            revenue_result = conn.execute(revenue_query, {
+                "hotel_name": hotel_name,
+                "start_date": start_date,
+                "end_date": end_date
+            })
+            total_revenue = float(revenue_result.fetchone()[0])
+            
+            # 3. Calcular días en el período
+            from datetime import datetime
+            start = datetime.strptime(start_date, '%Y-%m-%d')
+            end = datetime.strptime(end_date, '%Y-%m-%d')
+            days_in_period = (end - start).days
+            
+            # 4. Calcular habitaciones disponibles
+            available_room_nights = total_rooms * days_in_period
+            
+            # 5. Calcular RevPAR
+            if available_room_nights == 0:
+                return "No hay habitaciones disponibles en ese período"
+            
+            revpar = total_revenue / available_room_nights
+            
+            return f"""RevPAR para {hotel_name}:
+- Período: {start_date} a {end_date} ({days_in_period} días)
+- Habitaciones del hotel: {total_rooms}
+- Revenue total: €{total_revenue:,.2f}
+- Habitaciones-noche disponibles: {available_room_nights}
+- RevPAR: €{revpar:.2f} por habitación disponible"""
+            
+    except Exception as e:
+        logger.error(f"Error calculando RevPAR: {str(e)}")
+        return f"Error: {str(e)}"
+
 def create_sql_agent():
     """Crea el agente SQL con bind_tools"""
     
@@ -144,7 +309,7 @@ def create_sql_agent():
     )
 
     # Vincular las herramientas
-    tools= [query_bookings_database, get_bookings_schema]
+    tools= [query_bookings_database, get_bookings_schema, calculate_occupancy_rate, calculate_revpar]
     llm_with_tools= llm.bind_tools(tools=tools)
 
     return llm_with_tools, tools
@@ -194,6 +359,8 @@ IMPORTANTE - Columnas disponibles en la tabla 'bookings':
 Tienes acceso a estas herramientas:
 1. get_bookings_schema() - Para ver el esquema completo
 2. query_bookings_database(sql_query) - Para ejecutar consultas SQL
+3. calculate_occupancy_rate(hotel_name, start_date, end_date) - Calcular tasa de ocupación
+4. calculate_revpar(hotel_name, start_date, end_date) - Calcular RevPAR
 
 PROCESO:
 1. Analiza la pregunta
@@ -242,6 +409,7 @@ REGLAS CRÍTICAS:
                     print(f"\n🔍 SQL generado: {tool_args.get('sql_query', 'N/A')}\n")
                 
                 result= tool_func.invoke(tool_args)
+                print(f"🔧 Resultado de {tool_name}: {result[:200]}...")  # DEBUG
                 tool_results.append(f"Resultado de {tool_name}: {result}")
             
             # Reformular con LLM
@@ -251,7 +419,13 @@ Pregunta original: {query}
 Resultados de las herramientas:
 {chr(10).join(tool_results)}
 
-Genera una respuesta en lenguaje natural clara y concisa en español."""
+IMPORTANTE:
+- Si los resultados contienen una tabla markdown (con | y ---), DEBES preservarla EXACTAMENTE como está
+- NO conviertas las tablas en texto narrativo
+- Solo añade una breve introducción antes de la tabla si es necesario
+- Para respuestas simples (números, textos cortos), responde de forma natural en español
+
+Genera una respuesta clara y concisa."""
             
             agent_config = get_agent_config()
             llm_basic= ChatGoogleGenerativeAI(model= "gemini-2.0-flash-exp", temperature= 0, google_api_key= agent_config.api_key )
@@ -288,10 +462,13 @@ if __name__== "__main__":
     if test_connection():
         print("✅ Conexión a PostgreSQL OK\n")
 
-        test_queries = ["¿Cuánto facturó el hotel 'Obsidian Tower' en enero?"]
+        test_queries = [ "qué plan de comidas ha generado menos dinero en enero? el del Obsidian Tower o el de Diamond Falls?"
+        ]
         
         for q in test_queries:
+            print(f"\n{'='*60}")
             print(f"📊 {q}")
+            print(f"{'='*60}")
             resp= invoke_sql_agent(q)
             print(f"💬 {resp}\n")
     else:

@@ -1,6 +1,6 @@
 # WORKSHOP RESOLUTION
 
-# Exercise 1: Hotel Details with RAG
+# 1 RAG + Tools
 
 ## 📋 Descripción
 
@@ -58,9 +58,8 @@ python3 gen_synthetic_hitels.py
 
 - Creamos el script del Rag (`hotel_rag_agent.py`) en `\home\manuelmaturana\hospitality_PoC\ai_agents_hospitality\agents`.
 
-# RAG
 
-## Loader
+## 1.1 Loader
 
 Para tratar documentos locales primero hay que pasar estos a texto plano usando `loaders`.
 
@@ -78,7 +77,7 @@ def load_hotel_documents()-> List:
     return documents
 ```
 
-## Chunking
+## 1.2 Chunking
 
 Tras pasar los datos sintéticos a texto plano legible de tipo `document` dividimos éstos en chunks en pos de un mejor retrieval posterior
 
@@ -97,7 +96,7 @@ def split_documents(documents: List)->List:
     return chunks
 ```
 
-## VectorStore 
+## 1.3 VectorStore 
 Creamos un vectorstore donde almacena embeddings de los documentos. Si ya existe en disco lo carga desde ahí.
 ```python
 def get_or_create_vectorstore(force_rebuild: bool= False):
@@ -126,7 +125,7 @@ def get_or_create_vectorstore(force_rebuild: bool= False):
 
 Siguiendo el orden del workshop, a continuación creamos la cadena del RAG usando `langchain`. Luego veremos un paso intermedio entre el vectorstore y la cadena.
 
-## RAG Chain
+## 1.4 RAG Chain
 
 ```python
 
@@ -204,7 +203,7 @@ sync def handle_hotel_query_rag(query: str)-> str:
 ```
 
 
-## 🛠️ Herramientas (Tools) del Agente RAG - Exercise 1
+## 1.5 Herramientas (Tools) del Agente RAG - Exercise 1
 
 ### 📋 Resumen Ejecutivo
 
@@ -233,7 +232,7 @@ El **RAG puro** tiene limitaciones:
    - RAG: Busca semánticamente → lento, puede fallar
    - Tool: Filtra JSON directamente → rápido, 100% preciso
 
-## 🔧 Las 4 Herramientas Implementadas
+## 1.6 🔧 Las 4 Herramientas Implementadas
 
 ### 1. `search_hotels_by_city(city: str)`
 
@@ -363,7 +362,7 @@ get_room_prices(city="Cannes", room_type="Double")
 **Total rooms found:** 45
 ``` 
 
-Me he dado cuenta aquí de que no le he metido contexto de memoria al agente.
+## 1.7 Contexto
 
 ![alt text](image-8.png)
 
@@ -408,7 +407,7 @@ conversation_history.append(("assistant", response_content))
 
 ![alt text](image-7.png)
 
-# SQL
+# 2 SQL
 
 Mientras que el RAG estaba pensado para descripciones, listas sobre hoteles, ahora se orquestra un agente de SQL que conteste datos numéricos, métricas o KPIs sobre las reservas.
 
@@ -518,3 +517,51 @@ Los huéspedes pueden ser de cualquier país, ejemplos:
   WHERE check_in_date >= '2025-01-01' 
   AND check_in_date < '2025-02-01';
   ```
+
+
+
+## Arrancar sin el agente de IA
+
+Levantamos PostgreSQL en Docker para tener los datos de bookings disponibles, pero NO levantamos el contenedor del agente de IA porque vamos a programarlo nosotros manualmente en Python.
+
+```bash
+./start-app.sh --no_ai_agent
+```
+
+Vemos los contenedores levantados con `docker ps`:
+
+![alt text](image-9.png)
+
+##  Guión
+
+Crear un **SQL Agent** que pueda:
+- 1 . **Conectarse a Postgre SQL** para consultar la tabla de `bookings`.
+- 2 . **Traducir preguntas a lenguaje natural a SQL**
+  - Ejemplo: "Cuántas reservas hay en Berlín?
+  ```SQL
+  SELECT COUNT(*) FROM bookings WHERE city = 'Berlin'
+  ```
+- 3 . **Hacer cálculos analíticos** como:
+  - Número total de reservas por hotel
+  - Tasa de ocupación
+  - Revenue (ingresos totales)
+  - RevPAR (Revenue per Available Room)
+
+### Pasos a seguir:
+
+- **Paso 1**: crear el archivo `sql_agent.py`
+  - Conexión a PostgreSQL con SQLAlchemy (traductor de SQL-Python y viceversa)
+  - Herramientas SQL de Langchain
+
+- **Paso 2**: implementar el agente SQL que:
+  - recibe preguntas como "¿Cuántos bookings hay en Madrid?"
+  - Genera SQL automáticamente
+  - Ejecuta la query
+  - Devuelve la respuesta en lenguaje natural
+
+- **Paso 3**: crear un **orquestrador** que decida:
+  - Si la pregunta es sobre hoteles/habitaciones $\rightarrow$ usa el agente RAG
+  - Si la pregunta es sobre reservas/estadísticas $\rightarrow$ usa el agente SQL
+
+- **Paso 4**: Integrar todo en `main.py` para que funcione desde el chat web vía websocket.
+

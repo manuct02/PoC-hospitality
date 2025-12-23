@@ -570,24 +570,24 @@ RevPAR = Total Revenue / Total Available Room-Nights
 ### 📋 Plan
 
 #### Phase 1: Setup & Database Connection
-- [ ] Start PostgreSQL database using `./start-app.sh --no_ai_agent`
-- [ ] Install SQL dependencies (`langchain-community`, `psycopg2-binary`)
-- [ ] Verify database connection (test connection string)
-- [ ] Inspect database schema and understand table structure
-- [ ] Load sample booking data to test queries
+- [✅] Start PostgreSQL database using `./start-app.sh --no_ai_agent`
+- [✅] Install SQL dependencies (`langchain-community`, `psycopg2-binary`)
+- [✅] Verify database connection (test connection string)
+- [✅] Inspect database schema and understand table structure
+- [✅] Load sample booking data to test queries
 
 #### Phase 2: SQL Database Integration
-- [ ] Create SQLDatabase instance from connection URI
-- [ ] Test basic SQL queries manually (SELECT, COUNT, SUM)
-- [ ] Verify database schema introspection works
-- [ ] Test date filtering and aggregation queries
+- [✅] Create SQLDatabase instance from connection URI
+- [✅] Test basic SQL queries manually (SELECT, COUNT, SUM)
+- [✅] Verify database schema introspection works (está hardcoeado)
+- [✅] Test date filtering and aggregation queries
 
 #### Phase 3: SQL Agent Implementation
-- [ ] Create SQLDatabaseToolkit with database and LLM
-- [ ] Implement create_sql_agent with proper system prompt
-- [ ] Configure agent for hospitality context (hotel names, dates, metrics)
-- [ ] Add custom system prompt explaining booking schema
-- [ ] Test agent with simple queries (booking counts)
+- [✅] Create SQLDatabaseToolkit with database and LLM
+- [✅] Implement create_sql_agent with proper system prompt
+- [✅] Configure agent for hospitality context (hotel names, dates, metrics)
+- [✅] Add custom system prompt explaining booking schema
+- [✅] Test agent with simple queries (booking counts)
 
 #### Phase 4: Analytics Calculations
 - [ ] Implement bookings count query logic

@@ -267,7 +267,9 @@ if __name__== "__main__":
         print("✅ Conexión a PostgreSQL OK\n")
 
         test_queries = ["¿Cuántas reservas hay?",
-                        "¿Cuál es el hotel con más reservas?"]
+                        "¿Cuál es el hotel con más reservas?",
+                        "¿Cuántas reservas hay en enero de 2025?",
+                        "¿Cuál es el revenue total por hotel?"]
         
         for q in test_queries:
             print(f"📊 {q}")

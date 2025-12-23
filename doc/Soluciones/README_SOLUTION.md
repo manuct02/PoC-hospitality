@@ -646,5 +646,20 @@ En el archivo `orchestrator.py` creamos:
 - 1 . Una clasificación con `classify_query()` que devuelva simplemente "rag" o "sql" en función de la query.
 - 2 . EL orquestardor de la query (`orchestrate_query(query, conversation_history)`) que simplemente manda la query y el chat previo al agente de RAG o SQL.
 
+## Paso 4: Integrar en el main.py
 
+Integramos en el main.py nuestro `orchestrator.py` para conectar éste a la web vía websocket reemplazando el RAG que había antes. De esta forma, al estar importados ambos agentes dentro del orquestrador conectamos los dos a la web.
 
+```python
+if EXERCISE_AVAILABLE:
+  try:
+      logger.info(f"Using Orchestrator for query: {user_query[:100]}...")
+      response_content = await orchestrate_query(user_query, conversation_history)
+      logger.info(f"✅ Orchestrator response generated successfully for {uuid}")
+                        
+      # Guardar en historial
+      conversation_history.append(("user", user_query))
+      conversation_history.append(("assistant", response_content))
+``` 
+
+## Prueba y error (Debugging)

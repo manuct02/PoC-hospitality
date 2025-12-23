@@ -642,6 +642,9 @@ Creamos un **orquestrador** que decida automáticamente que agente usar:
 - Preguntas sobre **hoteles/ubicaciones/habitaciones/precios** $\longrightarrow$ **RAG Agent**
 - Preguntas sobre **bookings/ocupación/ingresos** $\longrightarrow$ **SQL Agent**
 
+En el archivo `orchestrator.py` creamos:
+- 1 . Una clasificación con `classify_query()` que devuelva simplemente "rag" o "sql" en función de la query.
+- 2 . EL orquestardor de la query (`orchestrate_query(query, conversation_history)`) que simplemente manda la query y el chat previo al agente de RAG o SQL.
 
 
 

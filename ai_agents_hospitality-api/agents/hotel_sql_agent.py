@@ -372,7 +372,9 @@ REGLAS CRÍTICAS:
 - Solo queries SELECT
 - Usa valores exactos de las columnas categóricas
 - Responde SIEMPRE en español de forma natural y amigable
-- Incluye números concretos en tus respuestas"""
+- Incluye números concretos en tus respuestas
+- Tienes terminantemente prohibido preguntar por el año en el que hay que calcular algo, si no se especifica en la query contesta a la misma asumiendo que te pregunta por 2025
+"""
       
         messages= [SystemMessage(content= system_prompt)]
         

@@ -71,7 +71,7 @@ Responde ÚNICAMENTE con 'rag' o 'sql' sin explicaciones."""
     logger.info(f"Query clasificada como: {classification}")
     return classification
 
-def orchestrate_query(query: str, conversation_history: Optional[list]= None)-> str:
+async def orchestrate_query(query: str, conversation_history: Optional[list]= None)-> str:
     """
     Orquestra la consulta dirigiéndola al agente apropiado.
 
@@ -95,11 +95,41 @@ def orchestrate_query(query: str, conversation_history: Optional[list]= None)-> 
             response= invoke_sql_agent(query=query, conversation_history=conversation_history)
         else:
             logger.info("Usando RAG Agent (hotels)")
-            response= invoke_agent_with_tools(query=query, conversation_history=conversation_history)
+            response= await invoke_agent_with_tools(query=query, conversation_history=conversation_history)
         
         return response
      
     except Exception as e:
         logger.error(f"Error en orquestador: {str(e)}")
         return f"Lo siento, hubo un error al procesar tu consulta: {str(e)}"
+
+if __name__=="__main__":
+    
+    # Test del orquestrador
+    print("🎭 Probando Orchestrator...\n")
+
+    test_queries = [
+        # Deberían ir a RAG
+        ("¿Cuánto cuesta una habitación doble premium en París?", "rag"),
+        ("¿Qué hoteles hay en Madrid?", "rag"),
+        ("¿Qué meal plans ofrece el hotel Obsidian Tower?", "rag"),
+        
+        # Deberían ir a SQL
+        ("¿Cuántas reservas hay en enero de 2025?", "sql"),
+        ("¿Cuál es la ocupación del Obsidian Tower en enero?", "sql"),
+        ("¿Cuál es el RevPAR del Royal Sovereign?", "sql"),
+    ]
+
+    for query, expected in test_queries:
+        print(f"📝 Query: {query}")
+        classification= classify_query(query=query)
+        status= "✅" if classification==expected else "❌"
+        print(f"{status} Clasificado como: {classification} (esperado: {expected})")
+    
+        # Ejecutamos la query
+        print("💬 Respuesta:")
+        import asyncio
+        response= asyncio.run(orchestrate_query(query=query))
+        print(f"{response[:200]}...\n")
+        print("="*60 + "\n")
     

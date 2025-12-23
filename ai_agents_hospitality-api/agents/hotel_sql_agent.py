@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import os
 from typing import Optional
-from datetime import time, datetime, timedelta
+import time
 
 from sqlalchemy import create_engine, text
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -18,6 +18,8 @@ from langchain_core.tools import tool
 from config.agent_config import get_agent_config
 
 from util.logger_config import logger
+
+start_time=time.time()
 
 # Configuración de la base de datos
 DB_CONFIG = {
@@ -261,6 +263,7 @@ def test_connection():
         return False
 
 if __name__== "__main__":
+    
     print("🔍 Probando SQL Agent...")
 
     if test_connection():
@@ -277,3 +280,9 @@ if __name__== "__main__":
             print(f"💬 {resp}\n")
     else:
         print("❌ Error de conexión")
+
+end_time= time.time()
+
+total_time= -(start_time-end_time)
+
+print(f"⏱️ tiempo total transcurrido {total_time} segundos")

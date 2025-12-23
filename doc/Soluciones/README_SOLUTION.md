@@ -553,15 +553,54 @@ Crear un **SQL Agent** que pueda:
   - Conexión a PostgreSQL con SQLAlchemy (traductor de SQL-Python y viceversa)
   - Herramientas SQL de Langchain
 
+
 - **Paso 2**: implementar el agente SQL que:
   - recibe preguntas como "¿Cuántos bookings hay en Madrid?"
   - Genera SQL automáticamente
   - Ejecuta la query
   - Devuelve la respuesta en lenguaje natural
 
+
 - **Paso 3**: crear un **orquestrador** que decida:
   - Si la pregunta es sobre hoteles/habitaciones $\rightarrow$ usa el agente RAG
   - Si la pregunta es sobre reservas/estadísticas $\rightarrow$ usa el agente SQL
 
 - **Paso 4**: Integrar todo en `main.py` para que funcione desde el chat web vía websocket.
+
+
+## Paso 1: Agente de SQL
+
+- Se crea la connection string con SQLAlchemy 
+```python
+connection_string= (f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['password']}" f"@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}")
+```
+- Creamos una función para ejecutar la query:
+```python
+def execute_sql_query(query: str) -> str:
+  engine= get_database_engine()
+        with engine.connect() as conn:
+            result= conn.execute(text(query))
+            rows= result.fetchall()
+            return "\n".join([str(dict(row._mapping)) for row in rows[:50]])
+```
+
+El método `.connect()`es lo que abre la conexión real con **PostgreSQL** creando un canal de comunicación con la base de datos.
+Usamo el `with` para cerrar aitomáticamente esta conexión al terminar.
+
+- Tenemos dos tools (`query_bookings_database` y `get_bookings_schema`) que ejecutan la consulta SQL en la base de datos de bookings y obtiene el esquema completo de la tabla de bookings respectivamente.
+
+- Se crea el agente con la función `create_sql_agent()`. El agente usa:
+  - LLM:
+    - modelo: "gemini-2.0-flash-exp"
+    - temperatura: 0 (nada inventivo)
+    - API KEY: "AI_AGENTIC_API_KEY"
+  - Tools:
+    - `query_bookings_database`
+    - `get_bookings-schema`
+  
+  - `.bind_tools` para vincular las herramientas con el llm.
+
+- El procesador de las consultas `invoke_sql_agent` con historial de conversación integrado. Es aquí donde implementamos el prompt del agente y una lista a modo de contexto conversacional.
+
+- Por último definimos una `test_connection()` que pruebe la conexión a PostgreSQL
 

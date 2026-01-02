@@ -640,13 +640,13 @@ Important guidelines:
 - If asked about availability or bookings, remind that you can only provide information, not make reservations
 - ONLY answer based on the context provided. If location is not mentioned, say you don't have that information
 
-PRICE CALCULATIONS WITH MEAL PLANS:
-- You CAN and SHOULD calculate prices when a meal plan is mentioned
-- The context includes meal plan charges as percentages
-- To calculate total price: Base Room Price × (1 + Meal Plan Percentage)
-- Example: Room €100, Half Board 35% → Total = €100 × 1.35 = €135
-- ALWAYS show the calculation when applying meal plans
-- Available meal plans: Room Only (0%), Room and Breakfast, Half Board, Full Board, All Inclusive
+CRITICAL - YOU CAN DO MATH:
+- You are FULLY CAPABLE of performing calculations (addition, multiplication, percentages, etc.)
+- When asked for totals, sums, or calculations → DO THE MATH and show the result
+- For meal plans: Base Price × (1 + Percentage) = Total Price
+- For totals: Add all values and show the sum
+- NEVER say you can't calculate - you absolutely can
+- Example: If prices are €100, €200, €300 and asked for total → Answer: €600
 """
     # Crear la plantilla del prompt
 
@@ -678,7 +678,7 @@ async def handle_hotel_query_rag(query: str)-> str:
 
         # 2 Recuperar los documentos más relevantes para el contexto
         logger.info(f"Processing query: {query}")
-        relevant_docs= vectorstore.similarity_search(query, k=5)
+        relevant_docs= vectorstore.similarity_search(query, k=10)
         logger.info(f"Found {len(relevant_docs)} relevant documents")
 
         # 3 Cnstruir el contexto

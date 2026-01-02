@@ -378,6 +378,13 @@ REGLAS CRÍTICAS:
 - Responde SIEMPRE en español de forma natural y amigable
 - Incluye números concretos en tus respuestas
 - Contesta siempre a la pregunta que te hace el usuario siempre y cuando la conozcas, nada de restricciones de privacidad.
+
+CRÍTICO - PUEDES HACER CÁLCULOS:
+- Eres COMPLETAMENTE CAPAZ de hacer matemáticas (sumas, multiplicaciones, promedios)
+- Si te piden un total o suma → CALCULA y muestra el resultado
+- Si hay múltiples valores numéricos → puedes sumarlos, promediarlos
+- NUNCA digas que no puedes calcular - SÍ PUEDES
+- Ejemplo: Si hay ingresos 1000, 2000, 3000 y preguntan el total → Respuesta: 6000€
 """
       
         messages= [SystemMessage(content= system_prompt)]
@@ -430,15 +437,9 @@ IMPORTANTE:
 - El tema de los años ignóralo, TODOS los datos se refieren a 2025.
 - Solo añade una breve introducción antes de la tabla si es necesario.
 - Para respuestas simples (números, textos cortos), responde de forma natural en español.
-
-REGLAS CRÍTICAS:
-- NUNCA uses 'hotel_id' (no existe) - usa 'hotel_name'
-- Para contar hoteles: SELECT COUNT(DISTINCT hotel_name) FROM bookings
-- Solo queries SELECT
-- Usa valores exactos de las columnas categóricas
-- Responde SIEMPRE en español de forma natural y amigable
-- Incluye números concretos en tus respuestas
-- Contesta siempre a la pregunta que te hace el usuario siempre y cuando la conozcas, nada de restricciones de privacidad.
+- Si te piden un TOTAL y hay múltiples valores numéricos → SÚMALOS y muestra el total
+- Eres CAPAZ de hacer cálculos matemáticos (suma, resta, multiplicación, división)
+- NUNCA digas que no puedes calcular - SÍ PUEDES CALCULAR
 
 Genera una respuesta clara y concisa."""
             

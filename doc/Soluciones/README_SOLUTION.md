@@ -77,6 +77,8 @@ def load_hotel_documents()-> List:
     return documents
 ```
 
+Cargamos los detalles de los hoteles `hotels.json`, `hotel_details.md` y `hotel_rooms.md`.
+
 ## 1.2 Chunking
 
 Tras pasar los datos sintéticos a texto plano legible de tipo `document` dividimos éstos en chunks en pos de un mejor retrieval posterior
@@ -167,7 +169,7 @@ def create_rag_chain():
     return _rag_chain
 ```
 
-También gestionamos después la función para gestionar la query.
+Seguidamente creamos función para gestionar la query.
 
 ```python
 sync def handle_hotel_query_rag(query: str)-> str:

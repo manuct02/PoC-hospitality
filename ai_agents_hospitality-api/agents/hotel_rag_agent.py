@@ -46,11 +46,14 @@ def load_hotel_documents()-> List:
     json_path= DATA_PATH / "hotels.json"
 
     if json_path.exists():
-        logger.info(f"Loading JSON data from {json_path}")
-        json_loader= JSONLoader(file_path=str(json_path), jq_schema= '.Hotels[]', text_content=False)
-        json_docs= json_loader.load()
-        logger.info(f"Loaded {len(json_docs)} documents from JSON")
-        documents.extend(json_docs)
+        try:
+            logger.info(f"Loading JSON data from {json_path}")
+            json_loader= JSONLoader(file_path=str(json_path), jq_schema= '.Hotels[]', text_content=False)
+            json_docs= json_loader.load()
+            logger.info(f"Loaded {len(json_docs)} documents from JSON")
+            documents.extend(json_docs)
+        except Exception as e:
+            logger.error(f"Failed to load JSON: {type(e).__name__}: {e}")
     else:
         logger.warning(f"JSON file not found: {json_path}")
     
@@ -85,21 +88,39 @@ def load_hotel_documents()-> List:
 def split_documents(documents: List)->List:
     '''
     Splitear los documents en chunks de menor tamaño
+    IMPORTANT: JSON documents (hotels) are NOT chunked to keep hotel data intact
+    Only MD files are chunked
 
       - input: lista de documents
       - output: lista de documents chunkeados
     '''
     text_splitter= RecursiveCharacterTextSplitter(
-        chunk_size= 1000,
-        chunk_overlap= 200,
+        chunk_size= 3000,
+        chunk_overlap= 300,
         length_function= len,
         separators=["\n\n", "\n", " ", ""] 
     )
 
-    chunks= text_splitter.split_documents(documents= documents)
-    logger.info(f"Split {len(documents)} documents into {len(chunks)} chunks")
+    json_docs = []
+    md_docs = []
     
-    return chunks
+    # Separate JSON from MD documents
+    for doc in documents:
+        # JSON docs have structured metadata, MD docs are plain text
+        if 'hotels.json' in doc.metadata.get('source', ''):
+            json_docs.append(doc)
+        else:
+            md_docs.append(doc)
+    
+    # Chunk ONLY the MD files
+    md_chunks = text_splitter.split_documents(documents=md_docs) if md_docs else []
+    
+    # Combine: JSON docs intact + MD chunks
+    all_chunks = json_docs + md_chunks
+    
+    logger.info(f"Split {len(documents)} documents: {len(json_docs)} JSON (intact) + {len(md_chunks)} MD chunks = {len(all_chunks)} total")
+    
+    return all_chunks
 
 
 
@@ -548,6 +569,12 @@ Tool Results:
             retriever = vectorstore.as_retriever(search_kwargs={"k": 20})
             relevant_docs = retriever.invoke(query)
             
+            # DEBUG: Log chunks for meal plan queries
+            if "meal" in query.lower() or "comida" in query.lower():
+                logger.info(f"Retrieved {len(relevant_docs)} chunks for meal plan query")
+                for i, doc in enumerate(relevant_docs[:5]):  # First 5 chunks
+                    logger.info(f"Chunk {i+1} (first 300 chars): {doc.page_content[:300]}")
+            
             # Construir contexto con los documentos recuperados
             context = "\n\n".join([doc.page_content for doc in relevant_docs])
             
@@ -627,7 +654,8 @@ def create_rag_chain():
 Your job is to answer questions about hotels, rooms, prices, and availability.
 
 Use the following context to answer the user's question accurately and concisely.
-If you cannot find the information in the context, politely say so.
+The context may contain JSON data with rooms, MealPlanPrices, etc.
+SEARCH THOROUGHLY in ALL the context before saying you don't have information.
 
 Context:
 {context}
@@ -638,15 +666,21 @@ Important guidelines:
 - If comparing hotels, present the information in a clear format
 - Always mention the currency (€) for prices
 - If asked about availability or bookings, remind that you can only provide information, not make reservations
-- ONLY answer based on the context provided. If location is not mentioned, say you don't have that information
+- SEARCH the ENTIRE context for information before saying you don't have it
 
-CRITICAL - YOU CAN DO MATH:
-- You are FULLY CAPABLE of performing calculations (addition, multiplication, percentages, etc.)
-- When asked for totals, sums, or calculations → DO THE MATH and show the result
-- For meal plans: Base Price × (1 + Percentage) = Total Price
+CRITICAL - MEAL PLAN PRICING:
+- Room base prices are in "PriceOffSeason" or "PricePeakSeason" fields
+- Meal plan MULTIPLIERS are in "MealPlanPrices" object (NOT MealPlanWeights!)
+- MealPlanPrices contains: "Room Only": 1.0, "Room and Breakfast": 1.18, "All Inclusive": 2.03, "Half Board": 1.5, "Full Board": 1.59
+- Formula: Room Base Price × MealPlanPrices[plan_name] = Total Price
+- Example: Room €100, plan "All Inclusive" → Total = €100 × 2.03 = €203
+- IGNORE MealPlanWeights (those are probability weights, NOT prices)
+
+CRITICAL - YOU CAN AND MUST DO MATH:
+- You are FULLY CAPABLE of performing calculations (multiplication, addition, etc.)
+- When asked for totals or meal plan prices → DO THE MATH and show the result
 - For totals: Add all values and show the sum
-- NEVER say you can't calculate - you absolutely can
-- Example: If prices are €100, €200, €300 and asked for total → Answer: €600
+- NEVER say you can't calculate - CHECK THE CONTEXT and DO THE MATH
 """
     # Crear la plantilla del prompt
 
@@ -680,6 +714,11 @@ async def handle_hotel_query_rag(query: str)-> str:
         logger.info(f"Processing query: {query}")
         relevant_docs= vectorstore.similarity_search(query, k=10)
         logger.info(f"Found {len(relevant_docs)} relevant documents")
+        
+        # DEBUG: Log chunks for meal plan queries
+        if "meal" in query.lower() or "comida" in query.lower():
+            for i, doc in enumerate(relevant_docs):
+                logger.info(f"Chunk {i+1} (first 200 chars): {doc.page_content[:200]}")
 
         # 3 Cnstruir el contexto
 

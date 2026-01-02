@@ -409,6 +409,16 @@ conversation_history.append(("assistant", response_content))
 
 ![alt text](image-7.png)
 
+## 1.8 Testing.
+
+- Queries de ubicación
+
+![alt text](image-19.png)
+
+- Queries de precios y planes de comida
+
+![alt text](image-21.png)
+
 # 2 SQL
 
 Mientras que el RAG estaba pensado para descripciones, listas sobre hoteles, ahora se orquestra un agente de SQL que conteste datos numéricos, métricas o KPIs sobre las reservas.

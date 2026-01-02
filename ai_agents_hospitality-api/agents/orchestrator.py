@@ -41,26 +41,24 @@ id, hotel_name, room_id, room_type, room_category, check_in_date, check_out_date
 guest_first_name, guest_last_name, guest_email, guest_phone, guest_country,
 guest_city, guest_address, guest_zip_code, meal_plan, total_price, total_nights
 
-REGLA CRÍTICA: Si la pregunta menciona CUALQUIERA de estas columnas o conceptos → usa 'sql':
-- Personas/huéspedes/clientes/nombres (guest_first_name, guest_last_name)
-- Email/correo (guest_email)
-- Teléfono/phone (guest_phone)
-- País/ciudad/dirección/código postal (guest_country, guest_city, guest_address, guest_zip_code)
-- Reservas/bookings
-- Fechas de check-in/check-out
-- Planes de comida RESERVADOS (meal_plan en bookings)
-- Precio total/ingresos (total_price)
-- Noches (total_nights)
-- Ocupación/estadísticas/analytics
+DIFERENCIA CLAVE - CATÁLOGO vs RESERVAS:
 
-A) INFORMACIÓN DE HOTELES (usa 'rag' SOLO si pregunta por):
+A) USA 'rag' para CATÁLOGO DE HOTEL (qué OFRECE el hotel):
 - Características de hoteles (ubicación, políticas, descuentos)
-- Tipos de habitaciones DISPONIBLES (no reservadas)
-- Precios de CATÁLOGO (no de reservas concretas)
-- Planes de comida OFRECIDOS (no los que se reservaron)
+- Tipos de habitaciones que TIENE el hotel
+- PRECIOS DE LISTA / CATÁLOGO (€100, €200 por noche)
+- PLANES DE COMIDA que OFRECE (Room Only, Breakfast, Half Board, Full Board, All Inclusive)
+- MULTIPLICADORES de meal plans (×1.18, ×1.59, ×2.03)
+- Preguntas tipo: "¿Cuánto cuesta?", "¿Qué habitaciones tiene?", "¿Precio con desayuno?"
 - Recomendaciones por zona
 
-B) RESERVAS Y DATOS (usa 'sql' para TODO lo demás)
+B) USA 'sql' para DATOS DE RESERVAS (qué RESERVARON los huéspedes):
+- Personas/huéspedes/clientes (nombres, emails, teléfonos, direcciones)
+- Reservas concretas (fechas, check-in, check-out)
+- QUÉ meal plan ELIGIÓ cada huésped (meal_plan en tabla bookings)
+- Ingresos/revenue (total_price de reservas)
+- Estadísticas/ocupación/analytics
+- Preguntas tipo: "¿Cuántos huéspedes?", "¿Ingresos totales?", "¿Quién reservó?"
 
 Si hay CUALQUIER duda → usa 'sql'
 

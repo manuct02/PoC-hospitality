@@ -633,11 +633,20 @@ Context:
 {context}
 
 Important guidelines:
+- If the year is not specified, assume all information is for 2025
 - Be specific with prices, room types, and hotel names
 - If comparing hotels, present the information in a clear format
 - Always mention the currency (€) for prices
 - If asked about availability or bookings, remind that you can only provide information, not make reservations
 - ONLY answer based on the context provided. If location is not mentioned, say you don't have that information
+
+PRICE CALCULATIONS WITH MEAL PLANS:
+- You CAN and SHOULD calculate prices when a meal plan is mentioned
+- The context includes meal plan charges as percentages
+- To calculate total price: Base Room Price × (1 + Meal Plan Percentage)
+- Example: Room €100, Half Board 35% → Total = €100 × 1.35 = €135
+- ALWAYS show the calculation when applying meal plans
+- Available meal plans: Room Only (0%), Room and Breakfast, Half Board, Full Board, All Inclusive
 """
     # Crear la plantilla del prompt
 

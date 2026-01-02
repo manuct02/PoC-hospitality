@@ -447,10 +447,10 @@ Create an agent that:
 
 ### Deliverables
 
-- [ ] Vector store populated with hotel and room data
-- [ ] RAG chain that retrieves relevant information
-- [ ] Agent that formats responses appropriately
-- [ ] Integration with the WebSocket API
+- [✅] Vector store populated with hotel and room data
+- [✅] RAG chain that retrieves relevant information
+- [✅] Agent that formats responses appropriately
+- [✅] Integration with the WebSocket API
 
 ---
 
@@ -619,10 +619,10 @@ RevPAR = Total Revenue / Total Available Room-Nights
 - [✅] Test end-to-end with WebSocket interface
 
 #### Phase 8: Optimization & Documentation
-- [ ] Optimize system prompt for better SQL generation
+- [✅] Optimize system prompt for better SQL generation
 - [ ] Add query result caching for common queries (optional)
-- [ ] Document SQL agent limitations and best practices
-- [ ] Add code comments and docstrings
+- [✅] Document SQL agent limitations and best practices
+- [✅] Add code comments and docstrings
 
 ### Deliverables
 

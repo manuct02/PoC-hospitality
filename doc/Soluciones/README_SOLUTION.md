@@ -417,7 +417,11 @@ conversation_history.append(("assistant", response_content))
 
 - Queries de precios y planes de comida
 
-![alt text](image-21.png)
+![alt text](image-22.png)
+
+- Comparación de habitaciones
+
+![alt text](image-23.png)
 
 # 2 SQL
 
@@ -681,3 +685,10 @@ if EXERCISE_AVAILABLE:
 ![alt text](image-18.png)
 
 El agente de SQL parece cumplir satisfactoriamente todas las queries de prueba.
+
+### Limitaciones
+- Parece empezar a desvariar a la hora de tener en cuenta +4 mensajes previos.
+- Sólo tiene queries de lectura `SELECT` por seguridad.
+- Cálculos dependientes del LLM. Hizo falta especificarle al LLM la capacidad del agente de poder operar con los datos exraídos.
+- Sin manejo de SQL avanzado (aunque a mí no me suponga nada).
+- Ha habido que hardcodear el contexto temporal.

@@ -23,6 +23,9 @@ from config.agent_config import get_agent_config
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain_core.prompts import PromptTemplate
 
+import chromadb
+from chromadb.config import Settings
+
 '''Las rutas de los datos y el almacén de vectores'''
 DATA_PATH = PROJECT_ROOT.parent / "bookings-db" / "output_files" / "hotels"
 VECTOR_STORE_PATH = PROJECT_ROOT / "vector_store"
@@ -132,13 +135,15 @@ def split_documents(documents: List)->List:
 
 def get_or_create_vectorstore(force_rebuild: bool= False):
     '''
-    Creamos un vectorstore donde almacena embeddings de los documentos
-    Si ya existe en disco lo carga desde ahí
+    Conecta o crea vectorstore en servidor ChromaDB
+    En Docker: se conecta a chromadb:8000
+    En local: se conecta a localhost:8000
+    Fallback a disco local si ChromaDB no disponible
     '''
 
     global _vectorstore
 
-    # Si ya está cargado enla memoria que lo devuelva
+    # Si ya está cargado en memoria que lo devuelva
     if _vectorstore is not None and not force_rebuild:
         logger.info("Using cached vectorstore from memory")
         return _vectorstore
@@ -147,37 +152,79 @@ def get_or_create_vectorstore(force_rebuild: bool= False):
     agent_config= get_agent_config()
     embeddings= GoogleGenerativeAIEmbeddings(model= "models/embedding-001", api_key= agent_config.api_key)
 
-    # Si está en el disco los cargamos desde ahí para no estar rebuildeando el modelo
-
-    if VECTOR_STORE_PATH.exists() and not force_rebuild:
-        logger.info(f"Loading existing vectorstore from {VECTOR_STORE_PATH}")
-        _vectorstore = Chroma(
-            persist_directory=str(VECTOR_STORE_PATH),
-            embedding_function=embeddings
-        )
-        logger.info("Vectorstore loaded successfully from disk")
+    # Conectar a servidor ChromaDB
+    chroma_host = os.getenv("CHROMA_HOST", "localhost")
+    chroma_port = int(os.getenv("CHROMA_PORT", "8000"))
+    
+    logger.info(f"Attempting to connect to ChromaDB server at {chroma_host}:{chroma_port}")
+    
+    try:
+        chroma_client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
+        
+        # Intentar obtener colección existente
+        try:
+            collection = chroma_client.get_collection(name="hotels_collection")
+            collection_count = collection.count()
+            
+            # Verificar si la colección tiene datos
+            if collection_count > 0:
+                logger.info(f"✅ Connected to existing hotels_collection in ChromaDB ({collection_count} items)")
+                _vectorstore = Chroma(
+                    client=chroma_client,
+                    collection_name="hotels_collection",
+                    embedding_function=embeddings
+                )
+                return _vectorstore
+            else:
+                logger.warning("Collection exists but is EMPTY - recreating...")
+                chroma_client.delete_collection(name="hotels_collection")
+                raise ValueError("Empty collection deleted")
+                
+        except Exception as e:
+            # Si no existe o está vacía, crear nueva
+            logger.info(f"Creating new hotels_collection in ChromaDB... (reason: {e})")
+            documents = load_hotel_documents()
+            if not documents:
+                raise ValueError("No documents loaded. Cannot create embeddings")
+            
+            chunks = split_documents(documents)
+            logger.info(f"Processing {len(chunks)} chunks for embedding...")
+            
+            _vectorstore = Chroma.from_documents(
+                documents=chunks,
+                embedding=embeddings,
+                client=chroma_client,
+                collection_name="hotels_collection"
+            )
+            logger.info(f"✅ Vectorstore created in ChromaDB with {len(chunks)} chunks")
+            return _vectorstore
+            
+    except Exception as e:
+        logger.error(f"Failed to connect to ChromaDB server: {e}")
+        logger.warning("Falling back to local disk-based vectorstore...")
+        
+        # Fallback a disco local si ChromaDB no está disponible
+        if VECTOR_STORE_PATH.exists() and not force_rebuild:
+            logger.info(f"Loading fallback vectorstore from {VECTOR_STORE_PATH}")
+            _vectorstore = Chroma(
+                persist_directory=str(VECTOR_STORE_PATH),
+                embedding_function=embeddings
+            )
+        else:
+            logger.info("Creating fallback vectorstore on disk...")
+            documents = load_hotel_documents()
+            if not documents:
+                raise ValueError("No documents loaded. Cannot create embeddings")
+            
+            chunks = split_documents(documents)
+            _vectorstore = Chroma.from_documents(
+                documents=chunks,
+                embedding=embeddings,
+                persist_directory=str(VECTOR_STORE_PATH)
+            )
+            logger.info(f"Fallback vectorstore created on disk with {len(chunks)} chunks")
+        
         return _vectorstore
-    
-    # Si no existe lo creamos de 0
-
-    logger.info("Creating new vector store...")
-
-    # 1 Carga de documentos
-
-    documents= load_hotel_documents()
-    if not documents:
-        raise ValueError("No documents loaded. cannot create embeddings")
-    
-    # 2 Chunkear los documents
-    chunks= split_documents(documents)
-    logger.info(f"Processing {len(chunks)} chunks for embedding...")
-
-    # 3 Crear vectorstore con ChromaDB
-    _vectorstore= Chroma.from_documents(documents= chunks,
-        embedding= embeddings,
-        persist_directory= str(VECTOR_STORE_PATH))
-    
-    logger.info(f"Vectorstore created and persisted to {VECTOR_STORE_PATH}")
     return _vectorstore
 
 

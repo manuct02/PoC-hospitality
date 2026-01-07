@@ -682,7 +682,7 @@ if EXERCISE_AVAILABLE:
       conversation_history.append(("assistant", response_content))
 ``` 
 
-## TEST
+## TEST del SQL
 
 ![alt text](image-17.png)
 
@@ -696,6 +696,127 @@ El agente de SQL parece cumplir satisfactoriamente todas las queries de prueba.
 - Cálculos dependientes del LLM. Hizo falta especificarle al LLM la capacidad del agente de poder operar con los datos exraídos.
 - Sin manejo de SQL avanzado (aunque a mí no me suponga nada).
 - Ha habido que hardcodear el contexto temporal.
+
+
+
+# Arquitectura Final
+![alt text](image-54.png)
+
+
+# TEST Final
+
+Tenemos un script markdown (`TESTS.md`) con 15 queries cuya finalidad es poner a prueba la fiabilidad del agente de hospitality.
+
+- Para ver los logs filtrados por **clasificación**:
+```bash
+docker compose logs -f ai_agents_hospitality-api 2>&1 | grep -E "clasificada|Usando.*Agent|Retrieved"
+```
+
+## Tests del SQL
+
+### Test 1: Contar bookings
+- **¿Cuántos bookings hay en total?**
+
+
+![alt text](image-25.png)
+![alt text](image-26.png)
+---
+
+### Test 2: Bookings por hotel.
+
+Aquí probamos su limitación en la alucinación comprobando que no invente.
+
+![alt text](image-27.png)
+---
+### Test 3: Bookings específicos.
+
+![alt text](image-28.png)
+![alt text](image-29.png)
+---
+
+### Test 4: Huéspedes por país.
+
+![alt text](image-30.png)
+![alt text](image-31.png)
+---
+
+### Test 5: Revenue total.
+
+![alt text](image-32.png)
+![alt text](image-33.png)
+---
+
+## Tests del RAG
+
+
+### Test 6: Listar hoteles.
+
+![alt text](image-34.png)
+![alt text](image-35.png)
+--- 
+
+### Test 7: Hoteles de una ciudad específica.
+
+![alt text](image-36.png)
+![alt text](image-37.png)
+---
+
+
+### Test 8: Contar habitaciones.
+
+![alt text](image-38.png)
+![alt text](image-39.png)
+---
+
+### Test 9: Precios base de las habitaciones.
+
+![alt text](image-40.png)
+![alt text](image-41.png)
+---
+
+### Test 10: Planes de comida.
+
+![alt text](image-43.png)
+![alt text](image-42.png)
+
+### Test 11: Precio con plan de comida (CRÍTICO).
+
+Las queries que involucran planes de comida han resultado especialmente problemáticas por el prompt.
+
+![alt text](image-44.png)
+![alt text](image-45.png)
+--- 
+
+### Test 12: Precio más barato con plan de comida.
+
+![alt text](image-46.png)
+![alt text](image-47.png)
+---
+
+### Test 13: Comparación de habitaciones.
+
+![alt text](image-48.png)
+![alt text](image-49.png)
+---
+
+
+## Pruebas híbridas.
+
+### Test 14: Ocupación del hotel.
+
+![alt text](image-50.png)
+---
+
+### Test 15: Hotel con más bookings.
+
+![alt text](image-51.png)
+---
+
+
+
+
+
+
 
 # Anotaciones
 
@@ -769,19 +890,3 @@ docker compose up -d --build  # Los scripts no tienen rebuild
 ./stop-app.sh --clean-all
 ./start-app.sh
 ```
-
-
-# TEST Final
-
-Tenemos un script markdown (`TESTS.md`) con 15 queries cuya finalidad es poner a prueba la fiabilidad del agente de hospitality.
-
-- Para ver los logs filtrados por **clasificación**:
-```bash
-docker compose logs -f ai_agents_hospitality-api 2>&1 | grep -E "clasificada|Usando.*Agent|Retrieved"
-```
-
-
-
-# Arquitectura Final
-![alt text](image-54.png)
-

@@ -692,3 +692,84 @@ El agente de SQL parece cumplir satisfactoriamente todas las queries de prueba.
 - Cálculos dependientes del LLM. Hizo falta especificarle al LLM la capacidad del agente de poder operar con los datos exraídos.
 - Sin manejo de SQL avanzado (aunque a mí no me suponga nada).
 - Ha habido que hardcodear el contexto temporal.
+
+# Anotaciones
+
+## Docker
+
+- Para el día a día sin borrar nada:
+```bash
+cd /home/manuelmaturana/PRJ/hospitality_PoC/prj-docker-compose
+
+# Parar todo
+docker compose down
+
+# Arrancar todo (mantiene embeddings y datos)
+docker compose up -d
+```
+
+- Si hacemos algún cambio en el código y queremos rebuildear:
+
+```bash 
+# Parar, rebuild y arrancar
+docker compose down
+docker compose up -d --build
+```
+
+- Si cambiamos el `docker-compose.yaml`:
+```bash
+docker compose down
+docker compose up -d
+```
+
+- Para ver si todo está corriendo:
+```bash
+docker compose ps
+```
+
+- Para ver los logs:
+
+```bash
+docker compose logs -f ai_agents_hospitality-api
+```
+
+**IMPORTANTE**: el volumen `chroma_data` se mantiene entre reinicios, así que los embeddings NO se pierden, sólo se recrean si borras el volumen con `docker volume rm prj-docker-compose_chroma_data`.
+
+## (Start/Stop)-app.sh
+
+Estos scripts son wrappers más completos que añaden validaciones y opciones.
+
+`$ start-app.sh`:
+- valida que no haya contenedores corriendo antes de arrancar
+- Hace health checksde los servicios (API, DB, ChromaDB)
+- opción `--force` para forzar reinicio
+- Más seguro y con feedback
+
+`$ stop-app.sh`:
+- Para los contenedores maneniendo los volúmenes
+- `.[stop-app.sh](http://_vscodecontentref_/3) -v` → Para y borra volúmenes (embeddings + DB)
+- `.[stop-app.sh](http://_vscodecontentref_/4) -i` → Para y borra imágenes
+- `.[stop-app.sh](http://_vscodecontentref_/5) --clean-all` → Limpieza total
+
+**Resumen práctico**:
+```bash
+# Uso recomendado diario:
+./start-app.sh    # Arranca todo con validaciones
+./stop-app.sh     # Para todo (mantiene embeddings)
+
+# Si cambias código:
+./stop-app.sh
+docker compose up -d --build  # Los scripts no tienen rebuild
+
+# Limpieza total (recrea embeddings):
+./stop-app.sh --clean-all
+./start-app.sh
+```
+
+
+# TEST Final
+
+Tenemos un script markdown (`TESTS.md`) con 15 queries cuya finalidad es poner a prueba la fiabilidad del agente de hospitality.
+
+
+

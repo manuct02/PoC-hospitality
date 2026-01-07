@@ -72,7 +72,7 @@ Responde ÚNICAMENTE con 'rag' o 'sql' sin explicaciones."""
         logger.warning(f"Clasificación inválida '{classification}', usando 'rag' por defecto")
         return "rag"
     
-    logger.info(f"Query clasificada como: {classification}")
+    logger.info(f"✅ Query clasificada como: {classification.upper()}")
     return classification
 
 async def orchestrate_query(query: str, conversation_history: Optional[list]= None)-> str:
@@ -86,8 +86,10 @@ async def orchestrate_query(query: str, conversation_history: Optional[list]= No
         - respuesta del agente que toque
     
     """
+    import time
 
     try: 
+        start_time = time.time()
         logger.info(f"Orquestrando query: {query}")
 
         # Clasificar la consulta
@@ -95,11 +97,14 @@ async def orchestrate_query(query: str, conversation_history: Optional[list]= No
 
         # Ejecutar el agente correspondiente
         if agent_type== 'sql':
-            logger.info("Usando SQL Agent (bookings)")
+            logger.info("🔵 Usando SQL Agent (bookings)")
             response= invoke_sql_agent(query=query, conversation_history=conversation_history)
         else:
-            logger.info("Usando RAG Agent (hotels)")
+            logger.info("🟢 Usando RAG Agent (hotels)")
             response= await invoke_agent_with_tools(query=query, conversation_history=conversation_history)
+        
+        elapsed_time = time.time() - start_time
+        logger.info(f"⏱️  Respuesta generada en {elapsed_time:.2f} segundos")
         
         return response
      

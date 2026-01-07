@@ -15,6 +15,7 @@ from langchain_community.vectorstores import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.tools import tool
+from langchain_core.documents import Document
 
 from util.configuration import PROJECT_ROOT
 from util.logger_config import logger
@@ -50,9 +51,19 @@ def load_hotel_documents()-> List:
 
     if json_path.exists():
         try:
-            logger.info(f"Loading JSON data from {json_path}")
-            json_loader= JSONLoader(file_path=str(json_path), jq_schema= '.Hotels[]', text_content=False)
-            json_docs= json_loader.load()
+            logger.info(f"Loading JSON data from {json_path} without jq dependency")
+            with open(json_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            hotels = data.get("Hotels", [])
+            json_docs = []
+            for hotel in hotels:
+                # Keep full hotel record together to avoid losing MealPlanPrices
+                json_docs.append(
+                    Document(
+                        page_content=json.dumps(hotel, ensure_ascii=False),
+                        metadata={"source": str(json_path.name)}
+                    )
+                )
             logger.info(f"Loaded {len(json_docs)} documents from JSON")
             documents.extend(json_docs)
         except Exception as e:
@@ -613,14 +624,20 @@ Tool Results:
             
             # Obtener documentos relevantes del vector store
             vectorstore = get_or_create_vectorstore()
-            retriever = vectorstore.as_retriever(search_kwargs={"k": 20})
+            # Aumentar k significativamente para asegurar que JSONs se recuperen
+            retriever = vectorstore.as_retriever(search_kwargs={"k": 50})
             relevant_docs = retriever.invoke(query)
             
-            # DEBUG: Log chunks for meal plan queries
-            if "meal" in query.lower() or "comida" in query.lower():
-                logger.info(f"Retrieved {len(relevant_docs)} chunks for meal plan query")
-                for i, doc in enumerate(relevant_docs[:5]):  # First 5 chunks
-                    logger.info(f"Chunk {i+1} (first 300 chars): {doc.page_content[:300]}")
+            # Priorizar documentos JSON (hoteles completos) sobre chunks de MD
+            json_docs = [doc for doc in relevant_docs if 'hotels.json' in doc.metadata.get('source', '')]
+            md_docs = [doc for doc in relevant_docs if 'hotels.json' not in doc.metadata.get('source', '')]
+            relevant_docs = json_docs + md_docs  # JSONs primero
+            
+            # DEBUG: ALWAYS log what we retrieved
+            logger.info(f"Retrieved {len(relevant_docs)} total chunks ({len(json_docs)} JSON + {len(md_docs)} MD)")
+            for i, doc in enumerate(relevant_docs[:3]):  # First 3 chunks
+                source = doc.metadata.get('source', 'unknown')
+                logger.info(f"Top chunk {i+1} from {source}: {doc.page_content[:250]}")
             
             # Construir contexto con los documentos recuperados
             context = "\n\n".join([doc.page_content for doc in relevant_docs])
@@ -639,8 +656,21 @@ INSTRUCTIONS:
 4. If the question asks about multiple items, include ALL of them, not just a sample
 5. For numerical data (prices, counts), include exact numbers
 6. If specific information is NOT in the context, clearly state what's missing
-7. You must be able to calculate simple operations
-8. REMEMBER previous conversation context - use conversation history to understand references
+7. REMEMBER previous conversation context - use conversation history to understand references
+
+CRITICAL - MEAL PLAN PRICING:
+- Room base prices are in "PriceOffSeason" or "PricePeakSeason" fields
+- Meal plan MULTIPLIERS are in "MealPlanPrices" object (NOT MealPlanWeights!)
+- MealPlanPrices contains: "Room Only": 1.0, "Room and Breakfast": 1.18, "All Inclusive": 2.03, "Half Board": 1.5, "Full Board": 1.59
+- Formula: Room Base Price × MealPlanPrices[plan_name] = Total Price
+- Example: Room €100, plan "All Inclusive" → Total = €100 × 2.03 = €203
+- IGNORE MealPlanWeights (those are probability weights, NOT prices)
+
+CRITICAL - YOU CAN AND MUST DO MATH:
+- You are FULLY CAPABLE of performing calculations (multiplication, addition, etc.)
+- When asked for totals or meal plan prices → DO THE MATH and show the result
+- For totals: Add all values and show the sum
+- NEVER say you can't calculate - CHECK THE CONTEXT and DO THE MATH
 
 IMPORTANT: Provide COMPLETE answers, not summaries. Don't say "here are some examples" - give ALL the information.
 
@@ -759,13 +789,21 @@ async def handle_hotel_query_rag(query: str)-> str:
 
         # 2 Recuperar los documentos más relevantes para el contexto
         logger.info(f"Processing query: {query}")
-        relevant_docs= vectorstore.similarity_search(query, k=10)
+        # Aumentar k para asegurar que los JSONs (hoteles completos) se recuperen
+        relevant_docs= vectorstore.similarity_search(query, k=50)
         logger.info(f"Found {len(relevant_docs)} relevant documents")
+        
+        # Priorizar documentos JSON (hoteles completos con MealPlanPrices) sobre chunks de MD
+        json_docs = [doc for doc in relevant_docs if 'hotels.json' in doc.metadata.get('source', '')]
+        md_docs = [doc for doc in relevant_docs if 'hotels.json' not in doc.metadata.get('source', '')]
+        relevant_docs = json_docs + md_docs  # JSONs primero
         
         # DEBUG: Log chunks for meal plan queries
         if "meal" in query.lower() or "comida" in query.lower():
-            for i, doc in enumerate(relevant_docs):
-                logger.info(f"Chunk {i+1} (first 200 chars): {doc.page_content[:200]}")
+            logger.info(f"Retrieved {len(json_docs)} JSON docs + {len(md_docs)} MD docs")
+            for i, doc in enumerate(relevant_docs[:5]):
+                source = doc.metadata.get('source', 'unknown')
+                logger.info(f"Chunk {i+1} from {source} (first 200 chars): {doc.page_content[:200]}")
 
         # 3 Cnstruir el contexto
 

@@ -25,6 +25,9 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - CHROMA_HOST=chromadb
       - CHROMA_PORT=8000
+    volumes:
+      - ../bookings-db/output_files:/app/bookings-db/output_files:ro
+      - ../bookings-db/output_files:/bookings-db/output_files:ro
     env_file:
       - .env
     networks:

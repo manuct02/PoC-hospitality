@@ -25,8 +25,8 @@ Abrir navegador: http://localhost:8001
 - Clasificación: SQL
 - Tiempo: < 3s
 
-![alt text](image-24.png)
-
+![alt text](image-25.png)
+![alt text](image-26.png)
 ---
 
 ### Test 2: Bookings por hotel
@@ -36,9 +36,10 @@ Abrir navegador: http://localhost:8001
 ```
 
 **Resultado esperado:**
-- Tabla con años disponibles (2025)
 - Clasificación: SQL
 - Debe mencionar que necesita especificar un hotel
+
+![alt text](image-27.png)
 
 ---
 
@@ -52,7 +53,8 @@ Abrir navegador: http://localhost:8001
 - Número específico de bookings para ese hotel
 - Clasificación: SQL
 - Puede incluir desglose por tipo de habitación
-
+![alt text](image-28.png)
+![alt text](image-29.png)
 ---
 
 ### Test 4: Huéspedes por país
@@ -66,6 +68,10 @@ Abrir navegador: http://localhost:8001
 - Clasificación: SQL
 - Puede incluir porcentaje del total
 
+![alt text](image-30.png)
+![alt text](image-31.png)
+
+
 ---
 
 ### Test 5: Revenue total
@@ -78,6 +84,8 @@ Abrir navegador: http://localhost:8001
 - Suma de total_price de todas las reservas
 - Clasificación: SQL
 - Formato en euros (€)
+![alt text](image-32.png)
+![alt text](image-33.png)
 
 ---
 
@@ -99,6 +107,9 @@ Hay un total de 50 hoteles repartidos en 3 ciudades de Francia:
 - Clasificación: RAG
 - Usa tool: `list_all_hotels()`
 
+![alt text](image-34.png)
+![alt text](image-35.png)
+
 ---
 
 ### Test 7: Hoteles en ciudad específica
@@ -111,7 +122,8 @@ Hay un total de 50 hoteles repartidos en 3 ciudades de Francia:
 - Lista de los 14 hoteles en París con nombres y direcciones
 - Clasificación: RAG
 - Usa tool: `search_hotels_by_city(city="Paris")`
-
+![alt text](image-36.png)
+![alt text](image-37.png)
 ---
 
 ### Test 8: Contar habitaciones
@@ -124,6 +136,8 @@ Hay un total de 50 hoteles repartidos en 3 ciudades de Francia:
 - Número total de habitaciones
 - Clasificación: RAG
 - Usa tool: `count_rooms(hotel_name="Ritz Paris")`
+![alt text](image-38.png)
+![alt text](image-39.png)
 
 ---
 
@@ -138,7 +152,8 @@ Hay un total de 50 hoteles repartidos en 3 ciudades de Francia:
 - Precio en temporada alta (€Y/noche)
 - Clasificación: RAG
 - Usa tool: `get_room_prices()` o RAG directo
-
+![alt text](image-40.png)
+![alt text](image-41.png)
 ---
 
 ### Test 10: Planes de comida disponibles
@@ -158,6 +173,8 @@ El hotel Obsidian Tower (hotelkey: 8235) ofrece los siguientes planes de comida:
 ```
 - Clasificación: RAG
 - Recupera JSON con MealPlanPrices
+![alt text](image-43.png)
+![alt text](image-42.png)
 
 ---
 
@@ -180,6 +197,9 @@ Con el plan de comidas "All Inclusive", el precio sería:
 - Debe calcular: precio_base × MealPlanPrices["All Inclusive"]
 - Multiplicador All Inclusive = 2.03
 
+![alt text](image-44.png)
+![alt text](image-45.png)
+
 ---
 
 ### Test 12: Precio más barato con plan de comida
@@ -193,7 +213,8 @@ Con el plan de comidas "All Inclusive", el precio sería:
 - Encuentra habitación con precio off-season más bajo
 - Aplica multiplicador Room and Breakfast (1.18)
 - Muestra cálculo: precio_base × 1.18 = total
-
+![alt text](image-46.png)
+![alt text](image-47.png)
 ---
 
 ### Test 13: Comparación de habitaciones
@@ -208,6 +229,8 @@ Compara los precios de habitaciones triple premium en Cannes
 - Ordenados por precio (opcional)
 - Clasificación: RAG
 
+![alt text](image-48.png)
+![alt text](image-49.png)
 ---
 
 ## Pruebas Híbridas (RAG + SQL)
@@ -223,7 +246,7 @@ Compara los precios de habitaciones triple premium en Cannes
 - Segundo: contar bookings en enero (SQL)
 - Calcular: % ocupación = (bookings / habitaciones) × 100
 - Clasificación: SQL o híbrido
-
+![alt text](image-50.png)
 ---
 
 ### Test 15: Hotel con más bookings
@@ -236,7 +259,7 @@ Compara los precios de habitaciones triple premium en Cannes
 - Query SQL para contar bookings por hotel_name
 - Devuelve nombre del hotel con más reservas
 - Clasificación: SQL
-
+![alt text](image-51.png)
 ---
 
 ## Criterios de Éxito

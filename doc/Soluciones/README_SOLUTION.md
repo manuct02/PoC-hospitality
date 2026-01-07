@@ -39,6 +39,8 @@ El agente es capaz de:
 
 ---
 
+
+
 ## 🚀 Instalación y Setup
 
 ### Requisitos previos
@@ -363,6 +365,8 @@ get_room_prices(city="Cannes", room_type="Double")
 
 **Total rooms found:** 45
 ``` 
+
+![alt text](image-53.png)
 
 ## 1.7 Contexto
 
@@ -778,5 +782,6 @@ docker compose logs -f ai_agents_hospitality-api 2>&1 | grep -E "clasificada|Usa
 
 
 
-
+# Arquitectura Final
+![alt text](image-54.png)
 

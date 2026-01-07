@@ -771,5 +771,12 @@ docker compose up -d --build  # Los scripts no tienen rebuild
 
 Tenemos un script markdown (`TESTS.md`) con 15 queries cuya finalidad es poner a prueba la fiabilidad del agente de hospitality.
 
+- Para ver los logs filtrados por **clasificación**:
+```bash
+docker compose logs -f ai_agents_hospitality-api 2>&1 | grep -E "clasificada|Usando.*Agent|Retrieved"
+```
+
+
+
 
 

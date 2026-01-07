@@ -25,6 +25,8 @@ Abrir navegador: http://localhost:8001
 - Clasificación: SQL
 - Tiempo: < 3s
 
+![alt text](image-24.png)
+
 ---
 
 ### Test 2: Bookings por hotel

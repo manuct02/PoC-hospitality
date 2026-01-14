@@ -790,7 +790,7 @@ async def handle_hotel_query_rag(query: str)-> str:
         # 2 Recuperar los documentos más relevantes para el contexto
         logger.info(f"Processing query: {query}")
         # Aumentar k para asegurar que los JSONs (hoteles completos) se recuperen
-        relevant_docs= vectorstore.similarity_search(query, k=50)
+        relevant_docs= vectorstore.similarity_search(query, k=20)
         logger.info(f"Found {len(relevant_docs)} relevant documents")
         
         # Priorizar documentos JSON (hoteles completos con MealPlanPrices) sobre chunks de MD
